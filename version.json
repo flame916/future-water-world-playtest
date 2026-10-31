@@ -1,16 +1,18 @@
 {
-  "version": "v0.76.1-crab-warning",
+  "version": "v0.77-undersea-exploration",
   "date": "2026-10-31",
-  "coreSha256": "7ab1a1b4fd83d27603d5963196e68d44718c2075dfdd0056fc8025b8a6f38e74",
+  "coreSha256": "3349428141f5f44fcf6bb66ab3d2e8105b05db48702cb3f551efc19bfa2937c3",
+  "explorationSha256": "d97f2647e750f75073f134ae4c356049782e090e1ad2d731e9a7d728e8785c49",
   "htmlSha256": {
-    "index.html": "28ceb279db1e8a578b62b07d310f84f7071bd2c845712fba07eb8eb3b3a71e34",
-    "voyage.html": "25936387e764fe730a47d44af73f34e1688833547b87a5bd2a6140528db7bfec",
-    "guard.html": "b75ebca2ea81c3baa3699621f9685913adb01d5eba6ce3c104377171236d23c4",
-    "appearance.html": "bed155c93b7428cf9b13c4bf88a6c5c2006d8823a12715c819335786735519ea",
-    "fish.html": "794452f4b564628d718dbfe9e1f733abdff3fbfe2b377224b03fb35655de9569",
-    "power.html": "8cb86b5f027f561c2182cf88b2d3be65c532688581c2d92e85bae90c38f542de",
-    "achievements.html": "1f84ac04e0496111a96169e753e13b4a17990b3838c2e7d1438d992c52ddc74e",
-    "build.html": "b31290321b00640ef32df468db7db486842327297fd0b34f523d85ca71d9413f",
-    "dive.html": "25c3c53715136ac10d5b221252697d100f88e592e9bb5e0975a7af316123a1f7"
+    "index.html": "edff41deb0bd8807b57a4b7cfd7dfe99cfc1cabc9cf64c734f2511e8e5f98c1e",
+    "voyage.html": "6284f021f385bab05d83c48cf743eb7bd29844fe7f51bbf03f0f726031f8dd53",
+    "guard.html": "1fcbb7de67fd8e21df186a4893cf25b7c32b4880a870cc81ae0654ece494c945",
+    "appearance.html": "d7ff434b986a6aa65b8a3d8ec81d868798e4b8a4a90e72a747bc3974cdc23dd5",
+    "fish.html": "0fc23f20c66bf5e22d77da60f3aa60f1f12eba22eff8fdabb8373133a59fb3af",
+    "power.html": "3f1fbf2af105761299957f864aefcd8388c88081d40b6cafaeb20a22f647e45f",
+    "achievements.html": "97039ab81f769e41e20a3e368781387501a93fa8b616136ea3de3998f7ed4dfa",
+    "build.html": "306cddca4bedffad5363de55586cf91c32236f80531fc0baae1f948232dea4ed",
+    "dive.html": "d94c9f7efdd33492f5728abf45b60f90822ebeac953bc692bc475d8a8bf71973",
+    "explore.html": "fea94935682726d00e434d8f06fae3eed8a204bda4b434d3b673dcbcdd2b37b7"
   }
 }
