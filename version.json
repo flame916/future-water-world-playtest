@@ -1,16 +1,16 @@
 {
-  "version": "v0.76-net-crab",
+  "version": "v0.76.1-crab-warning",
   "date": "2026-10-31",
-  "coreSha256": "5ed1958467642cb61712bdaf2f0ebbd99e7e6cef7b8901a674766df01ab63f42",
+  "coreSha256": "7ab1a1b4fd83d27603d5963196e68d44718c2075dfdd0056fc8025b8a6f38e74",
   "htmlSha256": {
-    "index.html": "8ccfacf944622ef8323ec93a4cfa9dfda269cdca86eeceafa6964d68ed19e4e8",
-    "voyage.html": "25a65ee334be68c52c708cc92784f02d09694268dd9c2eb272e0bfbf8385ca41",
-    "guard.html": "945caae43745c00cd1def7e52a6588ed33066606c66c2d64abf528e4e05a84ee",
-    "appearance.html": "1bb88f33d16f9289bd86d40b2afce315ecbd19c4eb0ec4780744574b711fda73",
-    "fish.html": "33bcb44ac6ce67e3ba9b953f595610474add363d13e3cbee1613474077463cef",
-    "power.html": "0b54ab09c4ec99a32152204cf39955ea04c89c5f798db277eb883c83555e363a",
-    "achievements.html": "8b990b0983b2f01ac00704a869dff79a95d39556620324d904ada70b8225bb2a",
-    "build.html": "bf09cbc9f10417fc4a7e7e9be6fe47062a8ab9dc74b47094a69b529c3e937cd0",
-    "dive.html": "d3c5bd7b993e5534db5c2e27823de0c6f01958e1ffcdec13f5ed1ad8c090d39f"
+    "index.html": "28ceb279db1e8a578b62b07d310f84f7071bd2c845712fba07eb8eb3b3a71e34",
+    "voyage.html": "25936387e764fe730a47d44af73f34e1688833547b87a5bd2a6140528db7bfec",
+    "guard.html": "b75ebca2ea81c3baa3699621f9685913adb01d5eba6ce3c104377171236d23c4",
+    "appearance.html": "bed155c93b7428cf9b13c4bf88a6c5c2006d8823a12715c819335786735519ea",
+    "fish.html": "794452f4b564628d718dbfe9e1f733abdff3fbfe2b377224b03fb35655de9569",
+    "power.html": "8cb86b5f027f561c2182cf88b2d3be65c532688581c2d92e85bae90c38f542de",
+    "achievements.html": "1f84ac04e0496111a96169e753e13b4a17990b3838c2e7d1438d992c52ddc74e",
+    "build.html": "b31290321b00640ef32df468db7db486842327297fd0b34f523d85ca71d9413f",
+    "dive.html": "25c3c53715136ac10d5b221252697d100f88e592e9bb5e0975a7af316123a1f7"
   }
 }

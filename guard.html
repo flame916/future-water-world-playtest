@@ -3850,7 +3850,7 @@ function updateDiveCrab(dt){
   const distance=Math.min(charging?290*dt:85*dt,charging?100:len),n=Math.max(1,Math.ceil(distance/4));
   for(let i=0;i<n;i++){
     const p={x:c.x+dx/(len||1)*distance/n,y:c.y+dy/(len||1)*distance/n};
-    if(Math.hypot(p.x-home.x,p.y-home.y)>91||DIVE_WALLS.some(w=>diveCircleRect(p.x,p.y,17,w))){c.phase='recover';c.timer=.8;break;}
+    if(p.x<39||p.x>351||p.y<199||p.y>623||Math.hypot(p.x-home.x,p.y-home.y)>91||DIVE_WALLS.some(w=>diveCircleRect(p.x,p.y,17,w))){c.phase='recover';c.timer=.8;break;}
     c.x=p.x;c.y=p.y;if(charging&&Math.hypot(c.x-r.x,c.y-r.y)<29)diveHit(c);
   }
   if(charging&&c.timer===0){c.phase='recover';c.timer=.8;}
@@ -3916,9 +3916,27 @@ function diveDrawPuffer(x,y,scale=1){
   for(let i=0;i<10;i++){const a=i*Math.PI/5;ctx.beginPath();ctx.moveTo(Math.cos(a)*23,Math.sin(a)*23);ctx.lineTo(Math.cos(a)*31,Math.sin(a)*31);ctx.stroke();}
   ctx.fillStyle=C.cream;ctx.beginPath();ctx.arc(-8,-5,6,0,7);ctx.arc(8,-5,6,0,7);ctx.fill();ctx.fillStyle=C.ink;ctx.beginPath();ctx.arc(-7,-5,2.5,0,7);ctx.arc(9,-5,2.5,0,7);ctx.fill();ctx.beginPath();ctx.arc(0,8,3,0,7);ctx.stroke();ctx.restore();
 }
+function diveCrabChargeEnd(c){
+  let end={x:c.x,y:c.y};const step=290*.42/40;
+  for(let i=0;i<40;i++){const p={x:end.x+c.dx*step,y:end.y+c.dy*step};if(p.x<39||p.x>351||p.y<199||p.y>623||Math.hypot(p.x-302,p.y-435)>91||DIVE_WALLS.some(w=>diveCircleRect(p.x,p.y,17,w)))break;end=p;}
+  return end;
+}
+function diveDrawCrabWarning(){
+  const r=state.dive.run,c=r.crab,end=diveCrabChargeEnd(c),length=Math.hypot(end.x-c.x,end.y-c.y),pulse=(Math.sin(r.t*22)+1)/2;
+  ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.atan2(c.dy,c.dx));
+  ctx.fillStyle=`rgba(246,156,91,${.22+pulse*.13})`;ctx.fillRect(0,-29,length,58);ctx.beginPath();ctx.arc(0,0,29,0,7);ctx.arc(length,0,29,0,7);ctx.fill();
+  ctx.strokeStyle='#FFD7A1';ctx.lineWidth=2;ctx.setLineDash([7,5]);ctx.strokeRect(0,-29,length,58);ctx.setLineDash([]);
+  for(let x=8;x<length-9;x+=22){ctx.beginPath();ctx.moveTo(x,-7);ctx.lineTo(x+9,0);ctx.lineTo(x,7);ctx.stroke();}ctx.restore();
+  ctx.save();ctx.fillStyle='#EDAF78';ctx.strokeStyle='#FFF0CE';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(c.x+32,c.y-21,13+pulse*2,0,7);ctx.fill();ctx.stroke();txt('!',c.x+32,c.y-21,19,'#30251F','900');ctx.restore();
+}
+function diveDrawCrabWarningBanner(){
+  const c=state.dive.run.crab;ctx.save();ctx.fillStyle='#EDAF78';ctx.strokeStyle='#FFF0CE';ctx.lineWidth=2;roundRect(44,190,302,46,8);ctx.fill();ctx.stroke();
+  txt('守舱蟹即将冲撞！',58,204,15,'#30251F','900','left');txt(`${c.timer.toFixed(1)}秒 · 横向躲出橙色区域`,58,224,10,'#30251F','700','left');
+  ctx.fillStyle='rgba(53,38,29,.25)';ctx.fillRect(251,215,80,7);ctx.fillStyle='#553526';ctx.fillRect(251,215,80*clamp(1-c.timer/.85,0,1),7);ctx.restore();
+}
 function diveDrawEncounter(){
   const d=state.dive,r=d.run;if(!r.encounter)return;const c=r.crab;
-  if(c.phase==='warn'){ctx.strokeStyle='#E8AE79';ctx.lineWidth=10;ctx.globalAlpha=.35;ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x+c.dx*100,c.y+c.dy*100);ctx.stroke();ctx.globalAlpha=1;}
+  if(c.phase==='warn')diveDrawCrabWarning();
   ctx.save();ctx.translate(c.x,c.y);ctx.strokeStyle='#D99B79';ctx.lineWidth=3;
   for(const side of [-1,1])for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(side*10,i*6-3);ctx.lineTo(side*24,i*7+3);ctx.lineTo(side*28,i*7-2);ctx.stroke();}
   ctx.fillStyle=c.phase==='bound'?'#678E8B':'#C87D61';ctx.beginPath();ctx.ellipse(0,0,19,14,0,0,7);ctx.fill();
@@ -3928,6 +3946,7 @@ function diveDrawEncounter(){
   const target=diveNetTarget();if(target){ctx.strokeStyle='#F4D88D';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(target.x,target.y,29,0,7);ctx.stroke();ctx.setLineDash([]);}
   const shot=r.netShot,fx=r.netFX;
   if(shot||fx?.time>0){const p=shot||fx;ctx.strokeStyle=C.cream;ctx.lineWidth=1.5;const radius=shot?9:22;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x-radius,p.y);ctx.lineTo(p.x+radius,p.y);ctx.moveTo(p.x,p.y-radius);ctx.lineTo(p.x,p.y+radius);ctx.stroke();}
+  if(c.phase==='warn')diveDrawCrabWarningBanner();
 }
 function diveDrawStation(){
   // Code-native prototype art: puffer tank, compressor and the returnable air bottle.
@@ -3939,7 +3958,7 @@ function diveDrawStation(){
   txt('河豚潜水补给站',195,357,19,C.cream,'800');txt('水槽 → 压气泵 → 储气瓶',195,385,12,C.creamSoft,'600');
 }
 function drawDivePrototype(){
-  const d=state.dive,r=d.run;uiBackground();txt('沉船潜水',20,34,23,C.cream,'800','left');txt(!r.encounter?'旧档教学规则 · v0.76':'网枪与守舱蟹 · v0.76',20,62,12,C.creamSoft,'600','left');
+  const d=state.dive,r=d.run;uiBackground();txt('沉船潜水',20,34,23,C.cream,'800','left');txt(!r.encounter?'旧档教学规则 · v0.76.1':'网枪与守舱蟹 · v0.76.1',20,62,12,C.creamSoft,'600','left');
   if(r.phase!=='active'){
     diveDrawStation();
     const result=r.phase==='result';
@@ -7531,7 +7550,7 @@ function drawSpatialHomeScreen() {
   ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
   ctx.save();ctx.beginPath();ctx.rect(0,246,W,H*0.64-246);ctx.clip();drawHomeWorld(true);ctx.restore();
   ctx.fillStyle = C.surface; ctx.fillRect(0, 0, W, 78);
-  txt('海上家园', 14, 22, 20, C.cream, '800', 'left'); txt('v0.76', W - 14, 22, 10, C.gold, '700', 'right');
+  txt('海上家园', 14, 22, 20, C.cream, '800', 'left'); txt('v0.76.1', W - 14, 22, 10, C.gold, '700', 'right');
   txt(`木${state.materials.wood}  塑${state.materials.plastic}  铁${state.materials.iron} · 居民${state.cats.length}/${catCap()}`, 14, 45, 12, C.cream, '600', 'left');
   const capacity=homeCapacityReport();
   txt(`床${capacity.beds}＋船长吊床1${capacity.legacy?`＋旧床位${capacity.legacy}`:''} · 新居民需室内床`, 14, 65, 11, C.gold, '600', 'left');
