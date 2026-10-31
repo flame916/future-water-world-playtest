@@ -11,6 +11,7 @@
   let created = false;
   // Review sessions use a separate save slot and never overwrite player progress.
   const params = new URLSearchParams(location.search);
+  const diveSample=window.__diveSample===true||params.get('sample')==='dive';window.__diveSample=diveSample;
   window.__fortificationSample=window.__fortificationSample===true||params.get('sample')==='fortification';
   window.__defenseAdvanced = !window.__fortificationSample&&(window.__defenseAdvanced === true || params.get('sample') === 'defense-advanced');
   window.__defenseSample = !window.__fortificationSample&&(window.__defenseAdvanced || window.__defenseSample === true || params.get('sample') === 'defense');
@@ -22,7 +23,9 @@
   const fishDiscoverySample=fishAchievementSample||window.__fishDiscoverySample===true||params.get('sample')==='fish-discovery';
   window.__fishDiscoverySample=fishDiscoverySample;
   const eelPowerSample=window.__eelPowerSample===true||params.get('sample')==='eel-power';window.__eelPowerSample=eelPowerSample;
-  const storagePrefix = achievementBuildSample
+  const storagePrefix = diveSample
+    ? params.get('review')==='1'?'future-water-share-v1-dive-review:':'future-water-share-v1-dive:'
+    : achievementBuildSample
     ? params.get('review')==='1'?'future-water-share-v1-achievement-build-review:':'future-water-share-v1-achievement-build:'
     : fishAchievementSample
     ? params.get('review')==='1'?'future-water-share-v1-fish-achievements-review:':'future-water-share-v1-fish-achievements:'
@@ -322,7 +325,7 @@ function drawAppearanceScreen(){
 const FISH_JOURNAL_DEFS={
   food:{name:'食用鱼',source:'各海域鱼群、渔网与鱼笼',use:'厨房制作鱼餐，也可用于普通投喂'},
   eel:{name:'电鳗',source:'沉船海域的鱼群',use:'首次捕获解锁电鳗发电组件图纸'},
-  puffer:{name:'河豚',source:'后续鱼种，当前尚未开放捕获',use:'后续护理组件，本轮不开放'}
+  puffer:{name:'河豚',source:'沉船潜水训练样例的生活舱',use:'训练回收后安置补给站水槽'}
 };
 const EEL_BLUEPRINT_COST={wood:8,plastic:4,iron:3};
 // Stable collections: future species get a new achievement, never revoke this set.
@@ -522,6 +525,7 @@ function fishCodexTouch(x,y){
   if(state.fishCodexTab!=='blueprints'){
     for(const id of Object.keys(FISH_JOURNAL_DEFS))if(inside(fishCodexRect(id))){state.fishCodexSelected=id;return;}
     if(inside(fishCodexRect('action'))&&state.fishCodexSelected==='eel'&&fishJournal().eelSeen)state.fishCodexTab='blueprints';
+    if(inside(fishCodexRect('action'))&&state.fishCodexSelected==='puffer')openDivePrototype();
     return;
   }
   if(!inside(fishCodexRect('action'))||!fishJournal().eelSeen)return;
@@ -554,16 +558,17 @@ function drawFishCodex(){
   for(const [id,def]of Object.entries(FISH_JOURNAL_DEFS)){
     const b=fishCodexRect(id),seen=id==='food'?j.foodSeen:id==='eel'?j.eelSeen:false;uiBox(b.x,b.y,b.w,b.h,state.fishCodexSelected===id);
     ctx.save();ctx.translate(b.x+42,b.y+40);if(!seen)ctx.globalAlpha=.35;
-    if(id==='eel')drawElectricEel(!seen);else if(id==='food')drawFish(false);else{ctx.fillStyle=C.creamSoft;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();}ctx.restore();
-    txt(id==='puffer'?'后续鱼种 · 未开放':seen?def.name:'未发现鱼种',b.x+83,b.y+25,16,C.cream,'700','left');
-    txt(id==='puffer'?'本轮先体验电鳗':seen?`捕获 ${id==='eel'?j.eelCatches:j.foodCatches} 次${id==='eel'?` · 保留${j.eels} / 安置${eelPower().assembled?1:0}`:''}`:id==='eel'?'线索：沉船海域鱼群':'线索：各海域鱼群',b.x+83,b.y+54,12,C.creamSoft,'600','left');
+    if(id==='eel')drawElectricEel(!seen);else if(id==='food')drawFish(false);else diveDrawPuffer(0,0,.6);ctx.restore();
+    txt(id==='puffer'?'河豚 · 潜水训练目标':seen?def.name:'未发现鱼种',b.x+83,b.y+25,16,C.cream,'700','left');
+    txt(id==='puffer'?'可进入沉船样例尝试捕捞':seen?`捕获 ${id==='eel'?j.eelCatches:j.foodCatches} 次${id==='eel'?` · 保留${j.eels} / 安置${eelPower().assembled?1:0}`:''}`:id==='eel'?'线索：沉船海域鱼群':'线索：各海域鱼群',b.x+83,b.y+54,12,C.creamSoft,'600','left');
   }
   const id=state.fishCodexSelected||'food',def=FISH_JOURNAL_DEFS[id],seen=id==='food'?j.foodSeen:id==='eel'?j.eelSeen:false;
-  uiBox(20,448,W-40,222);txt(seen?def.name:id==='puffer'?'后续鱼种':'等待首次捕获',36,479,19,C.gold,'800','left');
+  uiBox(20,448,W-40,222);txt(seen?def.name:id==='puffer'?'潜水训练：河豚':'等待首次捕获',36,479,19,C.gold,'800','left');
   txt(def.source,36,520,12,C.creamSoft,'600','left');
-  txt(seen?def.use:id==='puffer'?'当前不参与发现进度':'成功捕获后揭晓用途与关联图纸',36,556,12,C.cream,'600','left');
-  txt(id==='eel'&&seen?'图纸已解锁，使用电鳗后记录仍保留':id==='food'&&j.legacyFood?'旧库存已登记，历史捕获次数未补算':'发现记录永久保留，未持有也可以查看',36,600,11,C.creamSoft,'600','left');
+  txt(seen?def.use:id==='puffer'?'带回后安置训练水槽，独立记录发现':'成功捕获后揭晓用途与关联图纸',36,556,12,C.cream,'600','left');
+  txt(id==='puffer'?'训练记录不计入当前两鱼种收藏成就':id==='eel'&&seen?'图纸已解锁，使用电鳗后记录仍保留':id==='food'&&j.legacyFood?'旧库存已登记，历史捕获次数未补算':'发现记录永久保留，未持有也可以查看',36,600,11,C.creamSoft,'600','left');
   if(id==='eel'&&seen)uiButton(fishCodexRect('action'),'查看已解锁的发电组件图纸');
+  if(id==='puffer')uiButton(fishCodexRect('action'),'进入沉船潜水训练');
 }
 
 // ================= 布局 =================
@@ -3672,11 +3677,355 @@ function tryCard(card) {
   }
 }
 
+// ================= 沉船潜水操控样例 =================
+const DIVE_KEY='wreck_dive_prototype_v1';
+const DIVE_MAP={left:22,right:368,top:182,bottom:640,radius:13,speed:190};
+const DIVE_WALLS=[{x:22,y:495,w:220,h:18},{x:148,y:350,w:220,h:18},{x:22,y:250,w:210,h:18}];
+const DIVE_LOOT=[
+  {id:'scrap1',x:310,y:570,name:'木料包',size:1,reward:{wood:6},use:'木板6 · 储气改装'},
+  {id:'scrap2',x:210,y:427,name:'塑料包',size:1,reward:{plastic:4},use:'塑料4 · 储气改装'},
+  {id:'glass',x:70,y:425,name:'耐压玻璃',size:2,use:'预警镜核心 · 停稳打捞2.5秒'},
+  {id:'iron',x:70,y:295,name:'零件包',size:1,reward:{iron:3},use:'废铁3 · 预警镜改装'},
+  {id:'bottle',x:310,y:212,name:'旧储气瓶',size:2,use:'储气改装核心 · 停稳打捞2.5秒'},
+  {id:'puffer',x:265,y:400,name:'活河豚',size:2,fish:true,use:'网枪捕捞 · 回到入口后安置水槽'}
+];
+const DIVE_UPGRADES={bottle:{name:'储气瓶架',cost:{wood:6,plastic:4},part:'bottle'},glass:{name:'水流预警镜',cost:{iron:3},part:'glass'}};
+function diveLoot(id){return DIVE_LOOT.find(l=>l.id===id);}
+function diveWeight(ids){return ids.reduce((n,id)=>n+(diveLoot(id)?.size||0),0);}
+function diveZone(y){return y>=495?{name:'入口货舱',rate:1}:y>=350?{name:'生活舱',rate:1.25}:y>=250?{name:'机舱',rate:1.6}:{name:'密闭舱',rate:2};}
+function divePosition(l){const r=state.dive.run;return r.drops?.[l.id]||(l.id==='puffer'?{x:l.x+Math.sin(r.t*.85)*18,y:l.y+Math.sin(r.t*1.1)*9}:l);}
+function diveRoute(){
+  const r=state.dive.run,nodes=[{x:310,y:225},{x:310,y:300},{x:70,y:300},{x:70,y:420},{x:310,y:420},{x:310,y:550},{x:76,y:594}];
+  const i=r.y>=526?6:r.y>=382?(r.x>255&&r.y>420?5:4):r.y>=281?(r.x<135&&r.y>=300?3:2):r.x>245&&r.y>225?1:0;
+  return[{x:r.x,y:r.y},...nodes.slice(i)];
+}
+function diveReturnCost(){
+  const path=diveRoute();let cost=0;
+  for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],len=Math.hypot(a.x-b.x,a.y-b.y),steps=Math.max(1,Math.ceil(len/20));for(let k=0;k<steps;k++)cost+=len/steps/DIVE_MAP.speed*diveZone(a.y+(b.y-a.y)*(k+.5)/steps).rate;}
+  return Math.ceil(cost+2);
+}
+function diveRect(id){return id==='pause'?{x:324,y:20,w:46,h:44}:id==='withdraw'?{x:238,y:96,w:132,h:36}:id==='start'?{x:30,y:664,w:330,h:52}:id==='leave'?{x:30,y:730,w:330,h:40}:{x:35,y:410,w:320,h:52};}
+function diveInside(b,x,y){return x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h;}
+function makeDiveCrab(){return{x:302,y:435,phase:'idle',timer:0,dx:0,dy:0};}
+function makeDiveRun(){return{rulesVersion:2,encounter:1,crab:makeDiveCrab(),netCooldown:0,netTarget:null,netShot:null,netFX:null,stats:{shots:0,binds:0,pufferCaught:0},capacity:3,phase:'ready',x:76,y:594,oxygen:45,maxOxygen:45,t:0,hits:0,invulnerable:0,drag:null,picked:[],recovered:[],drops:{},ignored:[],protectedId:null,returning:false,bagOpen:false,flash:0,message:'',messageTime:0,settled:false,savedAt:0};}
+function diveLoad(){
+  let saved;try{saved=wx.getStorageSync(DIVE_KEY);}catch{}
+  const progress={bottleRecovered:!!saved?.bottleRecovered,runs:Math.max(0,Math.floor(Number(saved?.runs)||0)),best:Math.max(0,Math.min(5,Number(saved?.best)||0)),
+    materials:{wood:0,plastic:0,iron:0},components:{bottle:saved?.bottleRecovered?1:0,glass:0},claimed:[],upgrades:{bottle:false,glass:false},liveFish:{puffer:saved?.liveFish?.puffer?1:0},fishSeen:{puffer:!!saved?.fishSeen?.puffer},completedEncounter:!!saved?.completedEncounter};
+  for(const k of ['wood','plastic','iron'])progress.materials[k]=Math.max(0,Math.min(999,Math.floor(Number(saved?.materials?.[k])||0)));
+  if(saved?.schema===2){for(const k of ['bottle','glass']){progress.components[k]=saved.components?.[k]?1:0;progress.upgrades[k]=!!saved.upgrades?.[k];}progress.claimed=(Array.isArray(saved.claimed)?saved.claimed:[]).filter(id=>!!diveLoot(id));}
+  else if(progress.bottleRecovered)progress.claimed=['bottle'];
+  const r=makeDiveRun(),old=saved?.run;
+  if(old&&['active','result'].includes(old.phase)){
+    r.phase=old.phase;r.x=clamp(Number(old.x)||76,35,355);r.y=clamp(Number(old.y)||594,195,627);
+    r.rulesVersion=old.rulesVersion===2?2:1;r.maxOxygen=old.maxOxygen===55?55:45;
+    r.encounter=old.encounter===1?1:0;r.netCooldown=clamp(Number(old.netCooldown)||0,0,4);r.netTarget=['puffer','crab'].includes(old.netTarget)?old.netTarget:null;
+    if(old.crab&&['idle','warn','charge','bound','recover','return'].includes(old.crab.phase)){
+      const c=old.crab;r.crab={x:clamp(Number(c.x)||302,225,355),y:clamp(Number(c.y)||435,382,525),phase:c.phase,timer:clamp(Number(c.timer)||0,0,4),dx:clamp(Number(c.dx)||0,-1,1),dy:clamp(Number(c.dy)||0,-1,1)};
+    }
+    for(const k of ['shots','binds','pufferCaught'])r.stats[k]=Math.max(0,Math.floor(Number(old.stats?.[k])||0));
+    if(old.netShot&&['puffer','crab'].includes(old.netShot.targetId)&&['x','y','dx','dy','remaining'].every(k=>Number.isFinite(old.netShot[k]))){const s=old.netShot;r.netShot={x:clamp(s.x,22,368),y:clamp(s.y,182,640),dx:clamp(s.dx,-1,1),dy:clamp(s.dy,-1,1),remaining:clamp(s.remaining,0,.4),targetId:s.targetId};}
+    r.oxygen=clamp(Number(old.oxygen)||0,0,r.maxOxygen);r.t=clamp(Number(old.t)||0,0,600);r.hits=Math.max(0,Math.floor(Number(old.hits)||0));
+    r.picked=Array.from(new Set((Array.isArray(old.picked)?old.picked:[]).filter(id=>DIVE_LOOT.some(l=>l.id===id))));
+    r.settled=old.phase==='result';r.endReason=old.endReason==='rescue'?'rescue':'return';r.invulnerable=clamp(Number(old.invulnerable)||0,0,1.2);
+    r.capacity=r.rulesVersion===1?Math.max(3,diveWeight(r.picked)):3;r.returning=!!old.returning;
+    r.protectedId=r.picked.includes(old.protectedId)&&diveLoot(old.protectedId).size===1?old.protectedId:r.picked.find(id=>diveLoot(id).size===1)||null;
+    r.recovered=r.settled?(Array.isArray(old.recovered)?old.recovered:r.picked).filter(id=>!!diveLoot(id)):[];
+    r.leftBehind=r.settled?r.picked.filter(id=>!r.recovered.includes(id)):[];
+    for(const [id,p]of Object.entries(old.drops||{}))if(diveLoot(id)&&Number.isFinite(p.x)&&Number.isFinite(p.y))r.drops[id]={x:clamp(p.x,35,355),y:clamp(p.y,195,627)};
+    r.ignored=(Array.isArray(old.ignored)?old.ignored:[]).filter(id=>!!diveLoot(id));
+  }
+  return{...progress,run:r};
+}
+function diveSave(){
+  if(!state.dive)return;
+  const d=state.dive;try{wx.setStorageSync(DIVE_KEY,{schema:2,bottleRecovered:d.bottleRecovered,runs:d.runs,best:d.best,materials:d.materials,components:d.components,claimed:d.claimed,upgrades:d.upgrades,liveFish:d.liveFish,fishSeen:d.fishSeen,completedEncounter:d.completedEncounter,run:{...d.run,drag:null,bagOpen:false}});}catch{}
+}
+function openDivePrototype(){
+  if(fortBusy()||defenseActive()||navigation().travel)return homeNotice('先完成当前航行或护船遭遇，再进入潜水样例');
+  state.aiming=false;state.dive=diveLoad();state.screen='dive';state.paused=state.dive.run.phase==='active';state.confirmReset=false;
+  return true;
+}
+function diveStart(){
+  if(!state.dive)return false;state.dive.run=makeDiveRun();state.dive.run.maxOxygen=state.dive.upgrades.bottle?55:45;state.dive.run.oxygen=state.dive.run.maxOxygen;state.dive.run.phase='active';state.paused=false;diveSave();return true;
+}
+function diveUpgrade(type){
+  const d=state.dive,u=DIVE_UPGRADES[type];if(!u||d.run.phase==='active'||d.upgrades[type])return false;
+  if(!d.components[u.part]||Object.entries(u.cost).some(([k,n])=>d.materials[k]<n))return false;
+  for(const [k,n]of Object.entries(u.cost))d.materials[k]-=n;d.components[u.part]--;d.upgrades[type]=true;diveSave();return true;
+}
+function diveBagDrop(id){
+  const r=state.dive.run;if(!r.picked.includes(id))return false;
+  r.picked=r.picked.filter(k=>k!==id);r.drops[id]={x:r.x,y:r.y};r.ignored.push(id);if(r.protectedId===id)r.protectedId=r.picked.find(k=>diveLoot(k).size===1)||null;diveSave();return true;
+}
+function diveRequestReturn(){const r=state.dive.run;diveRelease();if(r.rulesVersion===1||Math.hypot(r.x-76,r.y-594)<26)return diveFinish('return');r.returning=true;r.message='沿导向线游回绿色入口，再带走全部背包';r.messageTime=2;diveSave();return false;}
+function diveRelease(){if(state.dive)state.dive.run.drag=null;}
+function diveMoveTouch(x,y){
+  const r=state.dive?.run;if(state.screen!=='dive'||state.paused||r?.phase!=='active'||!r.drag)return;
+  r.drag.x=x;r.drag.y=y;
+}
+function diveTouch(x,y){
+  const d=state.dive,r=d.run;
+  if(state.paused){if(diveInside(diveRect('resume'),x,y)){state.paused=false;diveRelease();}return;}
+  if(r.bagOpen){
+    if(diveInside({x:45,y:596,w:300,h:44},x,y)){r.bagOpen=false;diveRelease();return;}
+    for(let i=0;i<r.picked.length;i++){const id=r.picked[i],b={x:42,y:300+i*82,w:306,h:70};if(!diveInside(b,x,y))continue;
+      if(x>=280)diveBagDrop(id);else if(diveLoot(id).size===1){r.protectedId=id;diveSave();}return;}
+    return;
+  }
+  if(r.phase!=='active'){
+    if(diveInside({x:30,y:496,w:330,h:52},x,y))diveUpgrade('bottle');
+    else if(diveInside({x:30,y:558,w:330,h:52},x,y))diveUpgrade('glass');
+    else if(diveInside(diveRect('start'),x,y))diveStart();
+    else if(diveInside(diveRect('leave'),x,y)){diveSave();diveRelease();state.screen='ship';state.paused=false;}
+    return;
+  }
+  if(diveInside(diveRect('pause'),x,y)){diveRelease();state.paused=true;diveSave();return;}
+  if(diveInside(diveRect('withdraw'),x,y)){diveRequestReturn();return;}
+  if(diveInside({x:230,y:145,w:140,h:28},x,y)){r.bagOpen=true;diveRelease();return;}
+  if(r.encounter&&diveInside({x:248,y:652,w:122,h:28},x,y)){diveNetSwitch();diveRelease();return;}
+  if(r.encounter&&diveInside({x:248,y:690,w:122,h:72},x,y)){diveNetFire();diveRelease();return;}
+  if(y>=DIVE_MAP.top&&y<=774&&x>=12&&x<=W-12)r.drag={sx:x,sy:y,x,y};
+}
+function diveCircleRect(x,y,r,b){const px=clamp(x,b.x,b.x+b.w),py=clamp(y,b.y,b.y+b.h);return Math.hypot(x-px,y-py)<r;}
+function diveMove(dx,dy){
+  const r=state.dive.run,m=DIVE_MAP;
+  // Axis-separated short steps prevent wall tunnelling and allow sliding along corners.
+  const steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/4));
+  for(let i=0;i<steps;i++){
+    const x=clamp(r.x+dx/steps,m.left+m.radius,m.right-m.radius),y=clamp(r.y+dy/steps,m.top+m.radius,m.bottom-m.radius);
+    if(!DIVE_WALLS.some(b=>diveCircleRect(x,r.y,m.radius,b)))r.x=x;
+    if(!DIVE_WALLS.some(b=>diveCircleRect(r.x,y,m.radius,b)))r.y=y;
+  }
+}
+function diveClearLine(a,b,radius=3){
+  const n=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/4));
+  for(let i=0;i<=n;i++)if(DIVE_WALLS.some(w=>diveCircleRect(a.x+(b.x-a.x)*i/n,a.y+(b.y-a.y)*i/n,radius,w)))return false;
+  return true;
+}
+function diveNetCandidates(){
+  const d=state.dive,r=d.run;if(!r.encounter)return[];
+  const list=[{id:'crab',name:'守舱蟹',x:r.crab.x,y:r.crab.y}];
+  if(!d.claimed.includes('puffer')&&!r.picked.includes('puffer'))list.push({id:'puffer',name:'河豚',...divePosition(diveLoot('puffer'))});
+  return list.filter(p=>Math.hypot(p.x-r.x,p.y-r.y)<=112&&diveClearLine(r,p)).sort((a,b)=>Math.hypot(a.x-r.x,a.y-r.y)-Math.hypot(b.x-r.x,b.y-r.y));
+}
+function diveNetTarget(){const r=state.dive.run,list=diveNetCandidates();return list.find(p=>p.id===r.netTarget)||list[0]||null;}
+function diveNetSwitch(){const r=state.dive.run,list=diveNetCandidates();if(!list.length)return;const target=diveNetTarget();r.netTarget=list[(list.findIndex(p=>p.id===target?.id)+1)%list.length].id;diveSave();}
+function diveNetFire(){
+  const d=state.dive,r=d.run;if(!r.encounter||r.phase!=='active'||state.paused||r.bagOpen||r.netCooldown>0||r.netShot)return false;
+  const target=diveNetTarget();if(!target){r.message='靠近目标并避开舱壁，网枪射程112';r.messageTime=1.5;return false;}
+  if(target.id==='puffer'&&diveWeight(r.picked)+2>r.capacity){r.message='活河豚需要2格，请先整理背包';r.messageTime=2;return false;}
+  if(target.id==='crab'&&r.crab.phase==='bound'){r.message='蟹已被束缚，切换目标或趁机通过';r.messageTime=1.5;return false;}
+  const dx=target.x-r.x,dy=target.y-r.y,len=Math.hypot(dx,dy)||1;
+  r.netTarget=target.id;r.netCooldown=4;r.netShot={x:r.x,y:r.y,dx:dx/len,dy:dy/len,remaining:.32,targetId:target.id};r.stats.shots++;diveSave();return true;
+}
+function updateDiveNet(dt){
+  const d=state.dive,r=d.run,s=r.netShot;if(!s)return;
+  const n=Math.max(1,Math.ceil(400*dt/4));let hit=false;
+  for(let i=0;i<n;i++){
+    const before={x:s.x,y:s.y};s.x+=s.dx*400*dt/n;s.y+=s.dy*400*dt/n;
+    if(!diveClearLine(before,s)||s.x<22||s.x>368||s.y<182||s.y>640){r.message='渔网撞到舱壁';hit=true;break;}
+    const c=r.crab,p=divePosition(diveLoot('puffer'));
+    if(s.targetId==='crab'&&Math.hypot(s.x-c.x,s.y-c.y)<23){c.phase='bound';c.timer=3.2;r.stats.binds++;r.message='守舱蟹已束缚，趁机搜寻或脱身';hit=true;break;}
+    if(s.targetId==='puffer'&&!d.claimed.includes('puffer')&&!r.picked.includes('puffer')&&Math.hypot(s.x-p.x,s.y-p.y)<21){
+      if(diveWeight(r.picked)+2<=r.capacity){r.picked.push('puffer');r.stats.pufferCaught++;r.message='活河豚已装包，游回入口才能登记发现';}else r.message='背包已满，河豚未捕获';
+      hit=true;break;
+    }
+  }
+  s.remaining-=dt;if(hit||s.remaining<=0){r.netFX={x:s.x,y:s.y,time:.35};r.netShot=null;r.messageTime=2;if(!hit)r.message='渔网落空，冷却后可再试';diveSave();}
+}
+function updateDiveCrab(dt){
+  const r=state.dive.run,c=r.crab;if(!r.encounter)return;
+  c.timer=Math.max(0,c.timer-dt);
+  const home={x:302,y:435},dist=Math.hypot(r.x-c.x,r.y-c.y),leash=Math.hypot(r.x-home.x,r.y-home.y);
+  if(c.phase==='bound'){if(c.timer===0){c.phase='recover';c.timer=.8;}return;}
+  if(c.phase==='recover'){if(c.timer===0)c.phase='return';return;}
+  if(c.phase==='idle'){
+    if(dist<98&&leash<125&&diveClearLine(c,r,8)){const len=dist||1;c.phase='warn';c.timer=.85;c.dx=(r.x-c.x)/len;c.dy=(r.y-c.y)/len;}
+    return;
+  }
+  if(c.phase==='warn'){if(leash>135){c.phase='return';return;}if(c.timer===0){c.phase='charge';c.timer=.42;}return;}
+  const charging=c.phase==='charge',dx=charging?c.dx:home.x-c.x,dy=charging?c.dy:home.y-c.y,len=charging?1:Math.hypot(dx,dy);
+  if(!charging&&len<2){c.x=home.x;c.y=home.y;c.phase='idle';return;}
+  const distance=Math.min(charging?290*dt:85*dt,charging?100:len),n=Math.max(1,Math.ceil(distance/4));
+  for(let i=0;i<n;i++){
+    const p={x:c.x+dx/(len||1)*distance/n,y:c.y+dy/(len||1)*distance/n};
+    if(Math.hypot(p.x-home.x,p.y-home.y)>91||DIVE_WALLS.some(w=>diveCircleRect(p.x,p.y,17,w))){c.phase='recover';c.timer=.8;break;}
+    c.x=p.x;c.y=p.y;if(charging&&Math.hypot(c.x-r.x,c.y-r.y)<29)diveHit(c);
+  }
+  if(charging&&c.timer===0){c.phase='recover';c.timer=.8;}
+}
+function diveHazards(t){
+  const cycle=t%6,jetActive=cycle>=2&&cycle<4,jetWarning=cycle>=(state.dive?.upgrades?.glass?0:1)&&cycle<2;
+  return[
+    {id:'cable',x:286+Math.sin(t*1.8)*43,y:453,r:15,active:!state.dive?.run.encounter,disabled:!!state.dive?.run.encounter,warning:true},
+    {id:'debris',x:87+Math.sin(t*1.3)*35,y:303,r:13,active:true,warning:true},
+    {id:'jet',x:298,y:295,r:27,active:jetActive,warning:jetWarning}
+  ];
+}
+function diveHit(h){
+  const r=state.dive.run;if(r.invulnerable>0||r.phase!=='active')return false;
+  r.oxygen=Math.max(0,r.oxygen-4);r.hits++;r.invulnerable=1.2;r.flash=.2;r.message='碰撞：供气 −4秒';r.messageTime=1.4;
+  const dx=r.x-h.x,dy=r.y-h.y,len=Math.hypot(dx,dy)||1;diveMove((dx||1)/len*15,dy/len*15);
+  return true;
+}
+function diveFinish(reason){
+  const d=state.dive,r=d?.run;if(!r||r.phase!=='active'||r.settled)return false;
+  r.phase='result';r.settled=true;r.endReason=reason;r.drag=null;state.paused=false;
+  r.bagOpen=false;r.recovered=reason==='return'||r.rulesVersion===1?[...r.picked]:r.picked.filter(id=>id===r.protectedId&&diveLoot(id).size===1);
+  r.leftBehind=r.picked.filter(id=>!r.recovered.includes(id));
+  d.runs++;d.best=Math.max(d.best,r.recovered.length);
+  for(const id of r.recovered){if(d.claimed.includes(id))continue;const l=diveLoot(id);d.claimed.push(id);for(const [k,n]of Object.entries(l.reward||{}))d.materials[k]+=n;if(id==='glass'||id==='bottle')d.components[id]=1;}
+  if(r.recovered.includes('puffer')){d.liveFish.puffer=1;d.fishSeen.puffer=true;d.completedEncounter=true;}
+  if(r.recovered.includes('bottle'))d.bottleRecovered=true;
+  diveSave();return true;
+}
+function updateDive(dt){
+  const d=state.dive,r=d?.run;if(!r||r.phase!=='active'||state.paused||r.bagOpen)return;
+  r.t+=dt;r.oxygen=Math.max(0,r.oxygen-dt*(r.rulesVersion===1?1:diveZone(r.y).rate));r.invulnerable=Math.max(0,r.invulnerable-dt);r.flash=Math.max(0,r.flash-dt);r.messageTime=Math.max(0,r.messageTime-dt);
+  r.netCooldown=Math.max(0,r.netCooldown-dt);if(r.netFX)r.netFX.time=Math.max(0,r.netFX.time-dt);
+  if(r.oxygen<=0){diveFinish('rescue');return;}
+  const before={x:r.x,y:r.y};
+  if(r.drag){
+    const dx=r.drag.x-r.drag.sx,dy=r.drag.y-r.drag.sy,len=Math.hypot(dx,dy);
+    if(len>4){const speed=DIVE_MAP.speed*Math.min(1,(len-4)/35);diveMove(dx/len*speed*dt,dy/len*speed*dt);r.facing=Math.atan2(dy,dx);}
+  }
+  updateDiveNet(dt);updateDiveCrab(dt);
+  for(const h of diveHazards(r.t))if(h.active&&Math.hypot(r.x-h.x,r.y-h.y)<DIVE_MAP.radius+h.r)diveHit(h);
+  if(r.oxygen<=0){diveFinish('rescue');return;}
+  r.ignored=r.ignored.filter(id=>{const p=divePosition(diveLoot(id));return Math.hypot(r.x-p.x,r.y-p.y)<40;});
+  let salvaging=false;
+  for(const l of DIVE_LOOT){
+    const p=divePosition(l);if(l.fish||d.claimed.includes(l.id)||r.picked.includes(l.id)||r.ignored.includes(l.id)||Math.hypot(r.x-p.x,r.y-p.y)>=26)continue;
+    if(diveWeight(r.picked)+l.size>r.capacity){r.message=`${l.name}需${l.size}格，点背包放回物品`;r.messageTime=1;continue;}
+    if(l.size===2&&r.rulesVersion!==1){
+      salvaging=true;if(!r.salvaging||r.salvaging.id!==l.id)r.salvaging={id:l.id,time:0};
+      if(Math.hypot(r.x-before.x,r.y-before.y)<.3)r.salvaging.time+=dt;else r.salvaging.time=0;
+      r.message=`停稳打捞${l.name} ${Math.min(100,Math.floor(r.salvaging.time/2.5*100))}%`;r.messageTime=1;
+      if(r.salvaging.time<2.5)continue;
+    }
+    r.picked.push(l.id);if(!r.protectedId&&l.size===1)r.protectedId=l.id;r.salvaging=null;r.message=`${l.name}已装入 · 背包${diveWeight(r.picked)}/${r.capacity}格`;r.messageTime=1.8;diveSave();
+  }
+  if(!salvaging)r.salvaging=null;
+  if(r.returning&&Math.hypot(r.x-76,r.y-594)<26){diveFinish('return');return;}
+  if(r.t-r.savedAt>=1){r.savedAt=r.t;diveSave();}
+}
+function diveDrawPuffer(x,y,scale=1){
+  ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.fillStyle='#E4CA85';ctx.strokeStyle='#B69C65';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,0,25,0,Math.PI*2);ctx.fill();ctx.stroke();
+  for(let i=0;i<10;i++){const a=i*Math.PI/5;ctx.beginPath();ctx.moveTo(Math.cos(a)*23,Math.sin(a)*23);ctx.lineTo(Math.cos(a)*31,Math.sin(a)*31);ctx.stroke();}
+  ctx.fillStyle=C.cream;ctx.beginPath();ctx.arc(-8,-5,6,0,7);ctx.arc(8,-5,6,0,7);ctx.fill();ctx.fillStyle=C.ink;ctx.beginPath();ctx.arc(-7,-5,2.5,0,7);ctx.arc(9,-5,2.5,0,7);ctx.fill();ctx.beginPath();ctx.arc(0,8,3,0,7);ctx.stroke();ctx.restore();
+}
+function diveDrawEncounter(){
+  const d=state.dive,r=d.run;if(!r.encounter)return;const c=r.crab;
+  if(c.phase==='warn'){ctx.strokeStyle='#E8AE79';ctx.lineWidth=10;ctx.globalAlpha=.35;ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x+c.dx*100,c.y+c.dy*100);ctx.stroke();ctx.globalAlpha=1;}
+  ctx.save();ctx.translate(c.x,c.y);ctx.strokeStyle='#D99B79';ctx.lineWidth=3;
+  for(const side of [-1,1])for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(side*10,i*6-3);ctx.lineTo(side*24,i*7+3);ctx.lineTo(side*28,i*7-2);ctx.stroke();}
+  ctx.fillStyle=c.phase==='bound'?'#678E8B':'#C87D61';ctx.beginPath();ctx.ellipse(0,0,19,14,0,0,7);ctx.fill();
+  for(const side of [-1,1]){ctx.beginPath();ctx.arc(side*22,-16,8,.2,Math.PI*1.8);ctx.stroke();ctx.fillStyle=C.cream;ctx.beginPath();ctx.arc(side*8,-9,4,0,7);ctx.fill();ctx.fillStyle=C.ink;ctx.beginPath();ctx.arc(side*8,-9,2,0,7);ctx.fill();}
+  if(c.phase==='bound'){ctx.strokeStyle=C.teal;ctx.lineWidth=1.5;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(-24,i*9);ctx.lineTo(24,i*9);ctx.stroke();ctx.beginPath();ctx.moveTo(i*9,-24);ctx.lineTo(i*9,24);ctx.stroke();}}
+  if(c.phase!=='warn'&&c.phase!=='charge')txt(c.phase==='bound'?`束缚 ${c.timer.toFixed(1)}秒`:'守舱蟹',0,34,10,C.cream,'700');ctx.restore();
+  const target=diveNetTarget();if(target){ctx.strokeStyle='#F4D88D';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(target.x,target.y,29,0,7);ctx.stroke();ctx.setLineDash([]);}
+  const shot=r.netShot,fx=r.netFX;
+  if(shot||fx?.time>0){const p=shot||fx;ctx.strokeStyle=C.cream;ctx.lineWidth=1.5;const radius=shot?9:22;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x-radius,p.y);ctx.lineTo(p.x+radius,p.y);ctx.moveTo(p.x,p.y-radius);ctx.lineTo(p.x,p.y+radius);ctx.stroke();}
+}
+function diveDrawStation(){
+  // Code-native prototype art: puffer tank, compressor and the returnable air bottle.
+  uiBox(60,185,270,224);ctx.strokeStyle=C.teal;ctx.lineWidth=3;ctx.fillStyle='#285F6B';roundRect(83,208,132,122,16);ctx.fill();ctx.stroke();
+  if(!state.dive.run.encounter||state.dive.liveFish.puffer)diveDrawPuffer(145,271,1.15);else txt('等待安置活河豚',149,271,11,C.creamSoft,'600');
+  ctx.strokeStyle=C.gold;ctx.beginPath();ctx.moveTo(215,277);ctx.lineTo(246,277);ctx.lineTo(246,254);ctx.stroke();
+  for(let i=0;i<(state.dive?.upgrades.bottle?2:1);i++){ctx.fillStyle=i?C.teal:C.gold;roundRect(246+i*38,226,28,94,11);ctx.fill();ctx.fillStyle=C.cream;ctx.fillRect(255+i*38,216,10,15);}
+  if(state.dive?.upgrades.glass){ctx.strokeStyle=C.cream;ctx.lineWidth=4;ctx.beginPath();ctx.arc(144,270,45,0,7);ctx.stroke();txt('预警镜',144,314,10,C.cream,'700');}
+  txt('河豚潜水补给站',195,357,19,C.cream,'800');txt('水槽 → 压气泵 → 储气瓶',195,385,12,C.creamSoft,'600');
+}
+function drawDivePrototype(){
+  const d=state.dive,r=d.run;uiBackground();txt('沉船潜水',20,34,23,C.cream,'800','left');txt(!r.encounter?'旧档教学规则 · v0.76':'网枪与守舱蟹 · v0.76',20,62,12,C.creamSoft,'600','left');
+  if(r.phase!=='active'){
+    diveDrawStation();
+    const result=r.phase==='result';
+    txt(result?r.endReason==='rescue'?'已救援 · 只带回应急袋':r.recovered.includes('puffer')?'搜打撤完成 · 河豚入槽':'已游回入口 · 收获入仓':'训练目标：带回活河豚',195,103,19,C.gold,'800');
+    const names=r.recovered.map(id=>diveLoot(id).name).join('、');
+    txt(result?`带回：${names||'无'}${r.leftBehind?.length?` · 遗留${r.leftBehind.length}件`:''}`:'背包3格 · 大件占2格，停稳打捞2.5秒',195,135,11,C.creamSoft,'600');
+    txt('高亮瞄准 → 发网困蟹 → 切换捕河豚 → 游回入口',195,160,10,C.creamSoft,'600');
+    txt(`训练回收仓：木${d.materials.wood} · 塑${d.materials.plastic} · 铁${d.materials.iron}`,195,442,13,C.cream,'700');
+    txt('需游回入口带走大件；耗尽只保标记的小件1件',195,470,11,C.gold,'600');
+    for(const [i,type]of ['bottle','glass'].entries()){
+      const u=DIVE_UPGRADES[type],owned=d.upgrades[type],ready=!owned&&d.components[type]&&Object.entries(u.cost).every(([k,n])=>d.materials[k]>=n),y=496+i*62;
+      ctx.fillStyle=ready?C.coral:C.surfaceRaised;roundRect(30,y,330,52,8);ctx.fill();
+      txt(`${owned?'✓ ':''}${u.name} · ${type==='bottle'?'下潜供气＋10秒':'水流预警提前1秒'}`,195,y+16,12,C.cream,'700');
+      const price=Object.entries(u.cost).map(([k,n])=>`${resShort(k)}${n}`).join(' ');
+      txt(owned?'已装配 · 建筑外观已变化':`${price} ＋ ${type==='bottle'?'旧储气瓶':'耐压玻璃'}1 · ${ready?'点击装配':'材料尚未齐'}`,195,y+37,10,C.creamSoft,'600');
+    }
+    txt(d.fishSeen.puffer?`训练图鉴：河豚已发现 · 水槽${d.liveFish.puffer}条`:'河豚占2格；安全带回后才登记训练图鉴',195,634,11,C.creamSoft,'600');
+    uiButton(diveRect('start'),`${result?'再次下潜':'下潜'} · 供气${d.upgrades.bottle?55:45}秒 · 背包3格`);uiButton(diveRect('leave'),'返回船只',true);return;
+  }
+  uiButton(diveRect('pause'),'Ⅱ',true);uiBox(20,80,350,62);
+  const reserve=diveReturnCost(),low=r.oxygen<reserve+5;
+  txt(`供气 ${Math.ceil(r.oxygen)}秒 · ×${r.rulesVersion===1?1:diveZone(r.y).rate}`,34,101,14,low?'#EDAD7D':C.cream,'800','left');
+  ctx.fillStyle=C.surfaceRaised;roundRect(34,118,184,8,4);ctx.fill();ctx.fillStyle=low?'#EDAD7D':C.teal;roundRect(34,118,184*r.oxygen/r.maxOxygen,8,4);ctx.fill();
+  uiButton(diveRect('withdraw'),r.returning?'返航中 · 游回入口':'返航 · 需游回入口',true);
+  const status=r.encounter&&r.crab.phase==='warn'?'蟹即将冲撞，避开橙色预警线':r.messageTime>0?r.message:`${diveZone(r.y).name} · 返航约需${reserve}秒供气`;
+  txt(status.length>20?status.slice(0,19)+'…':status,20,160,10,low?'#EDAD7D':C.creamSoft,'600','left');
+  uiButton({x:230,y:145,w:140,h:28},`背包 ${diveWeight(r.picked)}/${r.capacity}格 · 整理`,true);
+  ctx.save();ctx.beginPath();ctx.rect(22,182,346,458);ctx.clip();
+  const sea=ctx.createLinearGradient(0,182,0,640);sea.addColorStop(0,'#102E42');sea.addColorStop(1,'#28616B');ctx.fillStyle=sea;ctx.fillRect(22,182,346,458);
+  ctx.strokeStyle='rgba(141,215,210,.08)';ctx.lineWidth=1;
+  for(let y=190;y<640;y+=28){ctx.beginPath();ctx.moveTo(22,y);ctx.lineTo(368,y);ctx.stroke();}
+  for(let i=0;i<12;i++){const x=40+(i*47)%310,y=630-((r.t*14+i*51)%440);ctx.strokeStyle='rgba(190,236,228,.18)';ctx.beginPath();ctx.arc(x,y,2+i%3,0,7);ctx.stroke();}
+  txt('密闭舱 ×2',92,215,11,C.creamSoft,'600');txt('机舱 ×1.6',182,321,11,C.creamSoft,'600');txt('生活舱 ×1.25',178,391,11,C.creamSoft,'600');
+  ctx.fillStyle='rgba(120,230,190,.15)';ctx.beginPath();ctx.arc(76,594,25,0,7);ctx.fill();ctx.strokeStyle=C.teal;ctx.stroke();txt('入口',76,627,10,C.cream,'700');
+  if(r.returning||low){const route=diveRoute();ctx.strokeStyle=low?'#EDAD7D':C.teal;ctx.setLineDash([5,6]);ctx.lineWidth=1.5;ctx.beginPath();route.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);}
+  for(const b of DIVE_WALLS){ctx.fillStyle='#586263';roundRect(b.x,b.y,b.w,b.h,3);ctx.fill();ctx.strokeStyle='#A18E71';ctx.lineWidth=2;ctx.stroke();for(let x=b.x+12;x<b.x+b.w;x+=24){ctx.fillStyle=C.ink;ctx.beginPath();ctx.arc(x,b.y+8,2,0,7);ctx.fill();}}
+  for(const h of diveHazards(r.t)){
+    if(h.disabled)continue;
+    ctx.save();ctx.translate(h.x,h.y);
+    if(h.id==='jet'){
+      ctx.fillStyle=h.active?'rgba(130,225,225,.4)':h.warning?'rgba(255,191,90,.25)':'rgba(130,225,225,.08)';ctx.beginPath();ctx.arc(0,0,h.r,0,7);ctx.fill();
+      ctx.strokeStyle=h.active?C.teal:C.gold;ctx.lineWidth=2;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(-15,i*10);ctx.lineTo(15,i*10);ctx.lineTo(8,i*10-4);ctx.stroke();}
+      if(h.warning)txt('即将喷流',0,-34,10,C.gold,'700');
+    }else if(h.id==='cable'){
+      ctx.strokeStyle='#E5A06F';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(278-h.x,381-h.y);ctx.lineTo(0,0);ctx.stroke();ctx.fillStyle='rgba(234,129,100,.15)';ctx.beginPath();ctx.arc(0,0,23,0,7);ctx.fill();ctx.fillStyle='#DC8668';ctx.beginPath();ctx.arc(0,0,12,0,7);ctx.fill();txt('!',0,0,14,C.cream,'800');
+    }else{ctx.rotate(Math.sin(r.t)*.3);ctx.fillStyle='#C9976B';ctx.beginPath();ctx.moveTo(-15,8);ctx.lineTo(-8,-12);ctx.lineTo(14,-6);ctx.lineTo(10,13);ctx.closePath();ctx.fill();ctx.strokeStyle=C.gold;ctx.stroke();}
+    ctx.restore();
+  }
+  for(const l of DIVE_LOOT)if(!d.claimed.includes(l.id)&&!r.picked.includes(l.id)){
+    if(l.fish&&!r.encounter)continue;
+    const p=divePosition(l);if(l.fish)diveDrawPuffer(p.x,p.y,.55);else{ctx.fillStyle=l.size===2?C.gold:C.teal;roundRect(p.x-9,p.y-12,18,26,5);ctx.fill();ctx.fillStyle=C.cream;ctx.fillRect(p.x-4,p.y-16,8,5);}
+    txt(`${l.name} ${l.size}格`,p.x,l.fish?p.y-28:p.y+29,10,C.cream,'700');
+    if(l.reward)txt(Object.entries(l.reward).map(([k,n])=>`${resShort(k)}${n}`).join(' '),p.x,p.y+43,9,C.creamSoft,'600');
+  }
+  diveDrawEncounter();
+  ctx.save();ctx.translate(r.x,r.y);ctx.rotate((r.facing??-Math.PI/2)+Math.PI/2);ctx.globalAlpha=r.invulnerable>0?.55+Math.sin(r.t*35)*.3:1;
+  ctx.fillStyle=C.gold;ctx.beginPath();ctx.ellipse(0,7,12,17,0,0,7);ctx.fill();ctx.fillStyle=C.teal;ctx.fillRect(-17,2,7,19);ctx.fillRect(10,2,7,19);
+  drawCatHead(0,-9,.37,'#D8B171');ctx.strokeStyle=C.cream;ctx.lineWidth=2;roundRect(-12,-16,24,12,5);ctx.stroke();ctx.fillStyle=C.ink;ctx.fillRect(-8,22,6,9);ctx.fillRect(3,22,6,9);
+  if(r.invulnerable>0){ctx.strokeStyle=C.gold;ctx.beginPath();ctx.arc(0,0,24,0,7);ctx.stroke();}ctx.restore();
+  if(r.flash>0){ctx.fillStyle='rgba(235,125,105,.15)';ctx.fillRect(22,182,346,458);}ctx.restore();
+  ctx.strokeStyle=C.teal;ctx.lineWidth=1.5;roundRect(22,182,346,458,5);ctx.stroke();
+  uiBox(20,654,r.encounter?216:350,120);txt(r.encounter?'按住拖动 · 松手停下':'在这里按住拖动方向 · 松手停下',r.encounter?128:195,679,r.encounter?11:13,C.cream,'700');
+  if(r.drag){const j=r.drag,dx=j.x-j.sx,dy=j.y-j.sy,len=Math.hypot(dx,dy)||1,f=Math.min(1,36/len);ctx.strokeStyle=C.teal;ctx.lineWidth=2;ctx.beginPath();ctx.arc(j.sx,j.sy,38,0,7);ctx.stroke();ctx.fillStyle=C.gold;ctx.beginPath();ctx.arc(j.sx+dx*f,j.sy+dy*f,13,0,7);ctx.fill();}
+  else{const cx=r.encounter?128:195;ctx.strokeStyle=C.teal;ctx.beginPath();ctx.arc(cx,730,26,0,7);ctx.stroke();txt('拖动',cx,730,11,C.gold,'700');}
+  if(r.encounter){
+    const target=diveNetTarget();uiButton({x:248,y:652,w:122,h:28},target?`${target.name} · 切换`:'靠近可瞄准目标',true);
+    const cooling=r.netCooldown>0;uiButton({x:248,y:690,w:122,h:72},cooling?`装网 ${r.netCooldown.toFixed(1)}秒`:target?.id==='puffer'?'捕捞河豚':'发网 · 困蟹',cooling||!target);
+    txt('同一网枪 · 共用冷却',309,778,9,C.creamSoft,'600');
+  }
+  txt(low?'返航供气偏紧，碰撞还会扣4秒':'救援仅保应急袋1格 · 大件需自己游回入口',195,801,11,low?'#EDAD7D':C.creamSoft,'600');
+  if(r.bagOpen){
+    ctx.fillStyle='rgba(5,22,32,.9)';ctx.fillRect(0,0,W,H);uiBox(24,204,342,456);txt(`背包 ${diveWeight(r.picked)}/${r.capacity}格`,195,239,21,C.cream,'800');
+    txt('点小件可标记应急保全；大件无法装应急袋',195,270,11,C.creamSoft,'600');
+    r.picked.forEach((id,i)=>{const l=diveLoot(id),y=300+i*82;uiBox(42,y,306,70);txt(`${r.protectedId===id?'✓ ':''}${l.name} · ${l.size}格`,54,y+21,13,C.cream,'700','left');const value=l.reward?Object.entries(l.reward).map(([k,n])=>`${resShort(k)}${n}`).join(' '):id==='bottle'?'延长供气':id==='puffer'?'活体目标':'提前预警';txt(l.size===1?`${value} · ${r.protectedId===id?'救援保全':'点此保全'}`:`${value} · 大件需游回入口`,54,y+48,10,C.creamSoft,'600','left');uiButton({x:282,y:y+15,w:58,h:38},'放回',true);});
+    if(!r.picked.length)txt('背包空，可选择想带回的物品',195,349,13,C.creamSoft,'600');
+    uiButton({x:45,y:596,w:300,h:44},'继续潜水 · 整理时已暂停');
+  }
+  if(state.paused){ctx.fillStyle='rgba(5,22,32,.84)';ctx.fillRect(0,0,W,H);uiBox(24,294,W-48,198);txt('潜水已暂停',195,335,23,C.cream,'800');txt('供气与障碍冻结 · 继续后重新拖动',195,374,12,C.creamSoft,'600');uiButton(diveRect('resume'),'继续潜水');}
+}
+
 // ================= 更新 =================
 function update(dt,playDt=dt) {
   dt = clamp(dt, 0, 0.05);
   // 结算面板打开时冻住模拟（但不清档、不重置）
   if (state.paused || state.logbookOpen || state.segmentPanel || state.kitPanel || navigation().travel?.event?.stage==='choice' || (defenseActive()&&state.defense.phase==='result')) return;
+  if(state.screen==='dive'){updateDive(dt);return;}
   updateAppearance(clamp(playDt,0,1));
   if(state.screen==='fishCodex'){state.messageTimer=Math.max(0,state.messageTimer-dt);state.saveTimer+=dt;if(state.dirty&&state.saveTimer>2){state.saveTimer=0;saveGame();}return;}
   if(state.screen==='appearance'){
@@ -5851,7 +6200,7 @@ function drawShipScreen() {
   uiButton({x:20,y:612,w:W-40,h:48},'预览外观 · 查看时长解锁');
   if(eelPower().assembled)uiButton({x:20,y:680,w:W-40,h:36},'电鳗发电机 · 管理供电',true);
   else txt('航线、燃料和出航准备在「航线」中查看',20,700,12,C.creamSoft,'600','left');
-  uiButton({x:20,y:730,w:W-40,h:36},'护船布防 · 查看炮台与岗位',true);drawNavBar();
+  uiButton({x:20,y:730,w:170,h:36},'护船布防',true);uiButton({x:200,y:730,w:170,h:36},'沉船潜水 · 样例',true);drawNavBar();
 }
 function drawCatHead(cx, cy, s, color) {
   ctx.save();
@@ -7182,7 +7531,7 @@ function drawSpatialHomeScreen() {
   ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
   ctx.save();ctx.beginPath();ctx.rect(0,246,W,H*0.64-246);ctx.clip();drawHomeWorld(true);ctx.restore();
   ctx.fillStyle = C.surface; ctx.fillRect(0, 0, W, 78);
-  txt('海上家园', 14, 22, 20, C.cream, '800', 'left'); txt('v0.73', W - 14, 22, 10, C.gold, '700', 'right');
+  txt('海上家园', 14, 22, 20, C.cream, '800', 'left'); txt('v0.76', W - 14, 22, 10, C.gold, '700', 'right');
   txt(`木${state.materials.wood}  塑${state.materials.plastic}  铁${state.materials.iron} · 居民${state.cats.length}/${catCap()}`, 14, 45, 12, C.cream, '600', 'left');
   const capacity=homeCapacityReport();
   txt(`床${capacity.beds}＋船长吊床1${capacity.legacy?`＋旧床位${capacity.legacy}`:''} · 新居民需室内床`, 14, 65, 11, C.gold, '600', 'left');
@@ -7360,6 +7709,7 @@ function drawBuildScreen() {
 
 // ================= 渲染 =================
 function render() {
+  if(state.screen==='dive'){drawDivePrototype();return;}
   if(state.screen==='eelPower'){drawEelPowerScreen();drawPauseOverlay();return;}
   if(state.screen==='fishCodex'){drawFishCodex();drawPauseOverlay();return;}
   if(state.logbookOpen){drawLogbook();return;}
@@ -7460,6 +7810,7 @@ function render() {
 
 // ================= 输入 =================
 function onTouch(x, y) {
+  if(state.screen==='dive'){diveTouch(x,y);return;}
   if(state.logbookOpen){logbookTouch(x,y);return;}
   if(state.kitPanel){kitTouch(x,y);return;}
   if (state.segmentPanel) {
@@ -7518,7 +7869,8 @@ function onTouch(x, y) {
 
   if (state.screen === 'ship') {
     if(eelPower().assembled&&x>=20&&x<=W-20&&y>=680&&y<=716){openEelPower();return;}
-    if(x>=20&&x<=W-20&&y>=730&&y<=766){fortOpen();return;}
+    if(x>=20&&x<=190&&y>=730&&y<=766){fortOpen();return;}
+    if(x>=200&&x<=370&&y>=730&&y<=766){openDivePrototype();return;}
     if(x>=20&&x<=W-20&&y>=612&&y<=660){openAppearance();return;}
     for(const [i,card]of getCards().entries()){const b=shipCardRect(i);if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){tryCard(card);return;}}
     return;
@@ -7643,6 +7995,7 @@ if (typeof wx !== 'undefined' && wx.onTouchStart) {
 }
 if (typeof wx !== 'undefined' && wx.onTouchMove) {
   wx.onTouchMove((e) => {
+    if(state.screen==='dive'){const t=e.touches?.[0];if(t)diveMoveTouch(t.clientX!=null?t.clientX:t.x,t.clientY!=null?t.clientY:t.y);return;}
     if (!state.aiming || state.paused || state.buildMode || autoSwingMode()) return;
     const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
     if (!t) return;
@@ -7650,16 +8003,16 @@ if (typeof wx !== 'undefined' && wx.onTouchMove) {
   });
 }
 if (typeof wx !== 'undefined' && wx.onTouchEnd) {
-  wx.onTouchEnd(() => releaseAim());
+  wx.onTouchEnd(() => {if(state.screen==='dive'){diveRelease();return;}releaseAim();});
 }
 if (typeof wx !== 'undefined' && wx.onTouchCancel) {
-  wx.onTouchCancel(() => { state.aiming=false; });
+  wx.onTouchCancel(() => { state.aiming=false;diveRelease(); });
 }
 if (typeof wx !== 'undefined' && wx.onHide) {
-  wx.onHide(() => { state.aiming=false;state.paused = true; state.everHidden = true; saveGame(); });
+  wx.onHide(() => { state.aiming=false;diveRelease();state.paused = true; state.everHidden = true; if(state.screen==='dive'){state.paused=state.dive.run.phase==='active';diveSave();return;}saveGame(); });
 }
 if (typeof wx !== 'undefined' && wx.onShow) {
-  wx.onShow(() => { if (state.everHidden) { applyOfflineGains(state.lastSeen); state.paused = true; } });
+  wx.onShow(() => { if (state.everHidden) { if(state.screen==='dive'){state.paused=state.dive.run.phase==='active';return;}applyOfflineGains(state.lastSeen); state.paused = true; } });
 }
 
 // ================= 启动 =================

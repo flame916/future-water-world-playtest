@@ -1,15 +1,16 @@
 {
-  "version": "v0.73-material-shortage",
+  "version": "v0.76-net-crab",
   "date": "2026-10-31",
-  "coreSha256": "f0f8d0125041fddc3231330df2609496d27af688cea4dd5fdb6314647db45887",
+  "coreSha256": "5ed1958467642cb61712bdaf2f0ebbd99e7e6cef7b8901a674766df01ab63f42",
   "htmlSha256": {
-    "index.html": "24742c40a96dd1a71e4214ef8bb0ed9a42238bec206757b81ef6924cc3a8dba3",
-    "voyage.html": "654982cd7da9b2c222f583b7bb87047fe9715da2bbce31be9063b853b1fc7825",
-    "guard.html": "ee5d9f7ac58f6170c336d185dc68de01b07e3bd2506863799d6a13e997a5f272",
-    "appearance.html": "612cf23f46adda0fdec58107610f058dc1808497e9d059099983e19e87d98c97",
-    "fish.html": "d0ca52dbcd8b4bc93527222033aa77c9bd718900c4f638fdfdb53749f02993d7",
-    "power.html": "1fc5a8d6f8f7f9023473bd0b6e85ae539e8d139b40c85c3cf42ab4e646651e4d",
-    "achievements.html": "827f590c0f50dbaf361ca2b0ed35d613d253a2589cbffc5108ba54ae6fbe62b9",
-    "build.html": "d4a296418c064a9f2aeb934c1ae97b933dc24b5f2ca64a0e1284d65317c79f91"
+    "index.html": "8ccfacf944622ef8323ec93a4cfa9dfda269cdca86eeceafa6964d68ed19e4e8",
+    "voyage.html": "25a65ee334be68c52c708cc92784f02d09694268dd9c2eb272e0bfbf8385ca41",
+    "guard.html": "945caae43745c00cd1def7e52a6588ed33066606c66c2d64abf528e4e05a84ee",
+    "appearance.html": "1bb88f33d16f9289bd86d40b2afce315ecbd19c4eb0ec4780744574b711fda73",
+    "fish.html": "33bcb44ac6ce67e3ba9b953f595610474add363d13e3cbee1613474077463cef",
+    "power.html": "0b54ab09c4ec99a32152204cf39955ea04c89c5f798db277eb883c83555e363a",
+    "achievements.html": "8b990b0983b2f01ac00704a869dff79a95d39556620324d904ada70b8225bb2a",
+    "build.html": "bf09cbc9f10417fc4a7e7e9be6fe47062a8ab9dc74b47094a69b529c3e937cd0",
+    "dive.html": "d3c5bd7b993e5534db5c2e27823de0c6f01958e1ffcdec13f5ed1ad8c090d39f"
   }
 }
