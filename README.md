@@ -1,14 +1,15 @@
-# 未来水世界 · 试玩版
+# 未来水世界 · v0.73 公开试玩
 
-版本：v0.64-iphone-share。
+手机建议用 Safari 竖屏打开，进度保存在当前浏览器。
 
-- [从头试玩](https://flame916.github.io/future-water-world-playtest/)：从手摇抓钩架开始，逐步建设海上家园。
-- [航行体验](https://flame916.github.io/future-water-world-playtest/voyage.html)：从已有部分家园的样例开始，体验航线、随机事件和航海日志。
+- [从头试玩](https://flame916.github.io/future-water-world-playtest/?v=073)
+- [建造奖励与缺料提示](https://flame916.github.io/future-water-world-playtest/build.html?v=073)
+- [航行体验](https://flame916.github.io/future-water-world-playtest/voyage.html?v=073)
+- [护船布防](https://flame916.github.io/future-water-world-playtest/guard.html?v=073)
+- [建筑外观](https://flame916.github.io/future-water-world-playtest/appearance.html?v=073)
+- [电鳗发现](https://flame916.github.io/future-water-world-playtest/fish.html?v=073)
+- [电鳗发电](https://flame916.github.io/future-water-world-playtest/power.html?v=073)
+- [鱼种成就](https://flame916.github.io/future-water-world-playtest/achievements.html?v=073)
 
-建议在较新版本iPhone Safari中竖屏打开。按住海面调整方向，松手出钩；底部切换家园、船只、伙伴和航线。
-
-进度保存在各自浏览器中，两个入口使用独立存档。清理网站数据、结束无痕会话、切换设备或浏览器可能丢失进度。出现无法保存的提示时，仅能临时试玩。
-
-已完成WebKit引擎与手机尺寸模拟检查，尚未完成iPhone真机验收。本版本是开发中的机制样例。
-
-本目录仅包含对外试玩页面及说明。HTML包含运行所需脚本和图片，可由GitHub Pages直接托管。
+各体验入口使用独立存档。HTML内含脚本与图片，不需要额外资源目录。
+当前为网页测试版，未接入真实广告。换设备、清理网站数据可能丢失本地进度。

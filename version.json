@@ -1,0 +1,15 @@
+{
+  "version": "v0.73-material-shortage",
+  "date": "2026-10-31",
+  "coreSha256": "f0f8d0125041fddc3231330df2609496d27af688cea4dd5fdb6314647db45887",
+  "htmlSha256": {
+    "index.html": "24742c40a96dd1a71e4214ef8bb0ed9a42238bec206757b81ef6924cc3a8dba3",
+    "voyage.html": "654982cd7da9b2c222f583b7bb87047fe9715da2bbce31be9063b853b1fc7825",
+    "guard.html": "ee5d9f7ac58f6170c336d185dc68de01b07e3bd2506863799d6a13e997a5f272",
+    "appearance.html": "612cf23f46adda0fdec58107610f058dc1808497e9d059099983e19e87d98c97",
+    "fish.html": "d0ca52dbcd8b4bc93527222033aa77c9bd718900c4f638fdfdb53749f02993d7",
+    "power.html": "1fc5a8d6f8f7f9023473bd0b6e85ae539e8d139b40c85c3cf42ab4e646651e4d",
+    "achievements.html": "827f590c0f50dbaf361ca2b0ed35d613d253a2589cbffc5108ba54ae6fbe62b9",
+    "build.html": "d4a296418c064a9f2aeb934c1ae97b933dc24b5f2ca64a0e1284d65317c79f91"
+  }
+}

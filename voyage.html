@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#102e36"><title>未来水世界 v0.64 · 分享试玩</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#102e36"><title>未来水世界 v0.72 · 分享试玩</title>
 <style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#102e36;overscroll-behavior:none}body{-webkit-user-select:none;user-select:none}#stage{--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);position:absolute;left:0;top:0;width:100%;height:100%;padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden}#game{display:block;flex:none;touch-action:none;-webkit-touch-callout:none;box-shadow:0 0 60px #0006}#storage-note{display:none;flex:none;width:min(100%,440px);padding:8px 12px;background:#fff3cf;color:#342b17;font:13px/1.4 sans-serif}#error{position:fixed;inset:20px;background:#fff;color:#222;padding:20px;white-space:pre-wrap;overflow:auto;display:none;z-index:10}</style></head>
 <body><main id="stage"><div id="storage-note" role="status" aria-live="polite"></div><canvas id="game" aria-label="未来水世界游戏画面"></canvas></main><pre id="error"></pre><script>window.__homeLoopSample=true;</script><script>'use strict';
 (() => {
@@ -11,11 +11,30 @@
   let created = false;
   // Review sessions use a separate save slot and never overwrite player progress.
   const params = new URLSearchParams(location.search);
-  window.__defenseAdvanced = window.__defenseAdvanced === true || params.get('sample') === 'defense-advanced';
-  window.__defenseSample = window.__defenseAdvanced || window.__defenseSample === true || params.get('sample') === 'defense';
-  window.__homeLoopSample = !window.__defenseSample && (window.__homeLoopSample === true || params.get('sample') === 'home-loop');
-  window.__salvageKitSample = !window.__defenseSample && !window.__homeLoopSample && (window.__salvageKitSample === true || params.get('sample') === 'salvage-kit');
-  const storagePrefix = window.__defenseAdvanced
+  window.__fortificationSample=window.__fortificationSample===true||params.get('sample')==='fortification';
+  window.__defenseAdvanced = !window.__fortificationSample&&(window.__defenseAdvanced === true || params.get('sample') === 'defense-advanced');
+  window.__defenseSample = !window.__fortificationSample&&(window.__defenseAdvanced || window.__defenseSample === true || params.get('sample') === 'defense');
+  window.__homeLoopSample = !window.__fortificationSample&&!window.__defenseSample && (window.__homeLoopSample === true || params.get('sample') === 'home-loop');
+  window.__salvageKitSample = !window.__fortificationSample&&!window.__defenseSample && !window.__homeLoopSample && (window.__salvageKitSample === true || params.get('sample') === 'salvage-kit');
+  const appearanceSample=window.__appearanceSample===true||params.get('sample')==='appearance';
+  const achievementBuildSample=window.__achievementBuildSample===true||params.get('sample')==='achievement-build';window.__achievementBuildSample=achievementBuildSample;
+  const fishAchievementSample=achievementBuildSample||window.__fishAchievementSample===true||params.get('sample')==='fish-achievements';window.__fishAchievementSample=fishAchievementSample;
+  const fishDiscoverySample=fishAchievementSample||window.__fishDiscoverySample===true||params.get('sample')==='fish-discovery';
+  window.__fishDiscoverySample=fishDiscoverySample;
+  const eelPowerSample=window.__eelPowerSample===true||params.get('sample')==='eel-power';window.__eelPowerSample=eelPowerSample;
+  const storagePrefix = achievementBuildSample
+    ? params.get('review')==='1'?'future-water-share-v1-achievement-build-review:':'future-water-share-v1-achievement-build:'
+    : fishAchievementSample
+    ? params.get('review')==='1'?'future-water-share-v1-fish-achievements-review:':'future-water-share-v1-fish-achievements:'
+    : eelPowerSample
+    ? params.get('review')==='1'?'future-water-share-v1-eel-power-review:':'future-water-share-v1-eel-power:'
+    : fishDiscoverySample
+    ? params.get('review')==='1'?'future-water-share-v1-fish-discovery-review:':'future-water-share-v1-fish-discovery:'
+    : appearanceSample
+    ? params.get('review')==='1'?'future-water-share-v1-appearance-review:':'future-water-share-v1-appearance:'
+    : window.__fortificationSample
+    ? params.get('review')==='1'?'future-water-share-v1-fortification-review:':'future-water-share-v1-fortification:'
+    : window.__defenseAdvanced
     ? params.get('review') === '1' ? 'future-water-share-v1-defense-advanced-review:' : 'future-water-share-v1-defense-advanced:'
     : window.__defenseSample
     ? params.get('review') === '1' ? 'future-water-share-v1-defense-review:' : 'future-water-share-v1-defense:'
@@ -200,6 +219,353 @@ function uiBox(x,y,w,h,raised=false){ctx.fillStyle=raised?C.surfaceRaised:C.surf
 function uiButton(b,label,secondary=false){ctx.fillStyle=secondary?C.surfaceRaised:C.coral;roundRect(b.x,b.y,b.w,b.h,8);ctx.fill();txt(label,b.x+b.w/2,b.y+b.h/2,13,C.cream,'700');}
 function skinRect(id){return{x:20+(id==='timber'?(W-48)/2+8:0),y:612,w:(W-48)/2,h:48};}
 
+// Cosmetic packages never change footprints, production, beds or combat stats.
+const BUILDING_SKINS={
+  salvage:{name:'拾荒棚屋',seconds:0,desc:'拼板外墙 · 补丁斜顶 · 绳扎支架',theme:'timber',walls:['#C9AE7F','#A88B61','#826747'],roof:['#8DA79A','#607F78','#C5AF82'],deck:['#BA8C58','#79603B','#624C32']},
+  harbor:{name:'帆布港居',seconds:1200,desc:'高挑帆顶 · 条纹雨篷 · 船帆旗',theme:'ocean',walls:['#F1D9A1','#D8BF8B','#A37E58'],roof:['#E9AA5B','#C86E45','#E5C48D'],deck:['#D0AC78','#8E7451','#665541']},
+  workshop:{name:'铁皮工坊',seconds:3600,desc:'平顶护栏 · 铆接铁墙 · 外置管道',theme:'ocean',walls:['#9BB4B0','#77958F','#526F6C'],roof:['#80A7A3','#527C7C','#BFA36A'],deck:['#A5AAA0','#6A7771','#495D59']}
+};
+let buildingPreviewId=null;
+// AD-PLACEHOLDER: a future provider must verify a completed 15-second placement.
+// This local build never creates an ad, starts a fake countdown or grants on click.
+const SKIN_AD_POLICY={enabled:false,placement:'building_skin',targetSeconds:15};
+let skinAdInFlight=false;
+function appearanceQuip(id){
+  if(id==='workshop')return homeCount('power')>0?'发电机到位，今晚终于不用摸黑了。':'过滤器之后，猫开始惦记发电机了。';
+  if(id==='harbor')return homeCount('purifier')>0?'过滤器到位，先给猫倒一碗淡水。':'猫的愿望：先有淡水，再住好房。';
+  return '筏子小归小，今晚不睡海里。';
+}
+async function requestAppearanceAd(provider=async()=>({status:'unavailable'})){
+  const id=state.appearanceSelected||appearance().active;
+  if(!BUILDING_SKINS[id]||appearance().owned.includes(id)||skinAdInFlight)return false;
+  skinAdInFlight=true;
+  // Capture the exact save object: a late result cannot reward a reset/loaded game.
+  const owner=appearance();
+  try{
+    const result=await provider({placement:SKIN_AD_POLICY.placement,skinId:id,seconds:SKIN_AD_POLICY.targetSeconds});
+    if(appearance()!==owner)return false;
+    if(result?.status==='unavailable'){state.message='15秒广告暂未接通，可继续游玩解锁';state.messageTimer=4;return false;}
+    const valid=result?.status==='completed'&&result.placement===SKIN_AD_POLICY.placement&&result.skinId===id&&result.adSeconds===15&&typeof result.receiptId==='string'&&result.receiptId.length>0&&result.receiptId.length<=128;
+    if(!valid){state.message='广告未完成，皮肤尚未领取';state.messageTimer=3;return false;}
+    if(owner.adReceipts.includes(result.receiptId))return false;
+    owner.adReceipts.push(result.receiptId);owner.adReceipts=owner.adReceipts.slice(-64);
+    if(!owner.owned.includes(id))owner.owned.push(id);
+    state.message=`已领取${BUILDING_SKINS[id].name}，可直接换装`;state.messageTimer=4;state.dirty=true;saveGame();return true;
+  }catch(e){state.message='广告暂不可用，稍后再试';state.messageTimer=3;return false;}
+  finally{skinAdInFlight=false;}
+}
+function makeAppearance(raw,legacySkin){
+  const a={active:'salvage',seconds:Math.max(0,Math.min(315360000,Number(raw?.seconds)||0)),owned:['salvage'],adReceipts:Array.isArray(raw?.adReceipts)?raw.adReceipts.filter(x=>typeof x==='string'&&x.length>0&&x.length<=128).slice(-64):[]};
+  if(raw&&Array.isArray(raw.owned))a.owned=[...new Set(['salvage',...raw.owned.filter(id=>BUILDING_SKINS[id])])];
+  if(!raw&&legacySkin==='timber')a.owned.push('harbor'); // Keep a legacy appearance option usable.
+  for(const [id,s]of Object.entries(BUILDING_SKINS))if(a.seconds>=s.seconds&&!a.owned.includes(id))a.owned.push(id);
+  if(a.owned.includes(raw?.active))a.active=raw.active;
+  return a;
+}
+function appearance(){return state.appearance||(state.appearance=makeAppearance());}
+function buildingStyle(){return BUILDING_SKINS[buildingPreviewId||appearance().active]||BUILDING_SKINS.salvage;}
+function updateAppearance(dt){
+  const a=appearance(),before=Math.floor(a.seconds/5);a.seconds=Math.min(315360000,a.seconds+dt);
+  if(Math.floor(a.seconds/5)!==before)state.dirty=true;
+  for(const [id,s]of Object.entries(BUILDING_SKINS))if(a.seconds>=s.seconds&&!a.owned.includes(id)){
+    a.owned.push(id);state.message=`新建筑外观已解锁：${s.name}`;state.messageTimer=4;state.dirty=true;saveGame();
+  }
+}
+function equipBuildingSkin(id){
+  const a=appearance();if(!BUILDING_SKINS[id]||!a.owned.includes(id))return false;
+  a.active=id;state.appearanceSelected=id;setSkin(BUILDING_SKINS[id].theme);return true;
+}
+function appearanceRect(action){
+  const ids=Object.keys(BUILDING_SKINS),i=ids.indexOf(action);
+  if(i>=0)return{x:20,y:450+i*68,w:W-40,h:60};
+  if(action==='back')return{x:W-90,y:14,w:70,h:42};
+  if(action==='equip')return{x:20,y:674,w:W-40,h:46};
+  if(action==='ad')return{x:20,y:730,w:W-40,h:40};
+  return{x:20+(Number(action)-1)*(W-40)/3,y:390,w:(W-40)/3-6,h:40};
+}
+function openAppearance(){state.appearanceSelected=appearance().active;state.appearanceFloor=1;state.screen='appearance';state.aiming=false;}
+function appearanceTouch(x,y){
+  const inside=b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h;
+  if(inside(appearanceRect('back'))){state.screen='ship';return;}
+  for(const id of Object.keys(BUILDING_SKINS))if(inside(appearanceRect(id))){state.appearanceSelected=id;state.messageTimer=0;return;}
+  for(let f=1;f<=3;f++)if(inside(appearanceRect(String(f)))){state.appearanceFloor=f;return;}
+  if(inside(appearanceRect('equip'))){if(!equipBuildingSkin(state.appearanceSelected)){state.message='累计游玩达到要求后自动解锁';state.messageTimer=3;}return;}
+  if(inside(appearanceRect('ad')))void requestAppearanceAd();
+}
+function drawAppearanceScreen(){
+  uiBackground();txt('家园外观',20,34,23,C.cream,'800','left');uiButton(appearanceRect('back'),'返回',true);
+  const a=appearance(),id=state.appearanceSelected||a.active,s=BUILDING_SKINS[id];
+  txt(`累计游玩 ${Math.floor(a.seconds/60)}分钟 · 外观不增加属性`,20,75,12,C.creamSoft,'600','left');
+  txt(s.name,20,112,20,C.gold,'800','left');txt(s.desc,20,140,12,C.creamSoft,'600','left');
+  const previous=homeRenderProjection,preview=buildingPreviewId;
+  ctx.save();ctx.beginPath();ctx.rect(12,154,W-24,228);ctx.clip();
+  try{
+    buildingPreviewId=id;homeRenderProjection={scale:1.4,center:{sum:8,diff:0},origin:347};
+    for(let r=3;r<=5;r++)for(let c=3;c<=5;c++)homePrism({r,c,width:1,height:1},-4,4,s.deck);
+    drawHomeCabin({type:'cabin',uid:'cosmetic_preview',r:3,c:3,width:2,height:2,size:2,level:state.appearanceFloor||1},false);
+    homePrism({r:5,c:5,width:1,height:1},0,13,s.walls);
+    const p=homeIsoPos(5,5),scale=homeViewScale();ctx.save();ctx.translate(p.x,p.y-13*scale);ctx.scale(scale,scale);ctx.strokeStyle='#4B4135';ctx.lineWidth=1.7;drawPurifierModel();ctx.restore();
+    drawBuildingTrim({type:'purifier',r:5,c:5,width:1,height:1},false);
+  }finally{homeRenderProjection=previous;buildingPreviewId=preview;ctx.restore();}
+  for(let f=1;f<=3;f++)uiButton(appearanceRect(String(f)),`${f}层预览`,state.appearanceFloor!==f);
+  for(const [key,skin]of Object.entries(BUILDING_SKINS)){
+    const b=appearanceRect(key),owned=a.owned.includes(key);uiBox(b.x,b.y,b.w,b.h,key===id);
+    txt(`${key===id?'› ':''}${skin.name}${a.active===key?' · 使用中':''}`,b.x+12,b.y+20,15,C.cream,'700','left');
+    txt(owned?'已解锁 · 可随时换装':`累计${skin.seconds/60}分钟解锁 · 还差${Math.ceil((skin.seconds-a.seconds)/60)}分钟`,b.x+12,b.y+43,12,owned?C.gold:C.creamSoft,'600','left');
+  }
+  txt(state.messageTimer>0?state.message:appearanceQuip(id),20,658,11,C.gold,'600','left');
+  uiButton(appearanceRect('equip'),a.active===id?'当前已使用':a.owned.includes(id)?'使用这套建筑外观':'继续游玩解锁',!a.owned.includes(id));
+  uiButton(appearanceRect('ad'),a.owned.includes(id)?'已拥有这套外观':skinAdInFlight?'广告处理中…':'看15秒广告直接领（暂未开放）',true);
+}
+
+// Fish discovery is permanent history; live eels never enter the food inventory.
+const FISH_JOURNAL_DEFS={
+  food:{name:'食用鱼',source:'各海域鱼群、渔网与鱼笼',use:'厨房制作鱼餐，也可用于普通投喂'},
+  eel:{name:'电鳗',source:'沉船海域的鱼群',use:'首次捕获解锁电鳗发电组件图纸'},
+  puffer:{name:'河豚',source:'后续鱼种，当前尚未开放捕获',use:'后续护理组件，本轮不开放'}
+};
+const EEL_BLUEPRINT_COST={wood:8,plastic:4,iron:3};
+// Stable collections: future species get a new achievement, never revoke this set.
+const FISH_ACHIEVEMENTS={
+  firstFish:{name:'初识鱼群',need:1,reward:{wood:2,plastic:1}},
+  firstCollection:{name:'鱼种收藏家Ⅰ',need:2,reward:{wood:6,plastic:3,iron:2}}
+};
+function fishCollectionCount(){const j=fishJournal();return Number(j.foodSeen)+Number(j.eelSeen);}
+function fishAchievementReadyCount(){const j=fishJournal(),count=fishCollectionCount();return Object.entries(FISH_ACHIEVEMENTS).filter(([id,a])=>count>=a.need&&!j.achievementClaims[id]).length;}
+function claimFishAchievement(id){
+  const a=FISH_ACHIEVEMENTS[id],j=fishJournal();
+  if(!a||j.achievementClaims[id]||fishCollectionCount()<a.need)return false;
+  if(Object.entries(a.reward).some(([k,n])=>999-state.materials[k]<n)){
+    state.fishAchievementNotice='建材仓空间不足，腾出位置后再领取';return false;
+  }
+  for(const [k,n]of Object.entries(a.reward))state.materials[k]+=n;
+  j.achievementClaims[id]=true;state.fishAchievementNotice=`已入建材库存：${rewardText(a.reward)}`;state.dirty=true;saveGame();return true;
+}
+function achievementBuildRect(){return{x:20,y:716,w:(W-48)/2,h:48};}
+function openAchievementBuild(){
+  state.screen='home';state.aiming=false;homeSwitchFloor(0);homeSetCategory('structure');homeMode('build');state.home.selected='deck';homeEnsureCatalog();
+  let site=null;for(let r=0;r<HOME_N&&!site;r++)for(let c=0;c<HOME_N;c++)if(!homeDeckHas(r,c)&&homeDeckAdjacent(r,c)){site={r,c};break;}
+  if(site)state.home.preview={action:'place',type:'deck',...site,w:1,h:1,floor:1};
+  homeNotice(site?'材料来自统一库存，确认建造才扣除':'甲板已铺满，可选择设施或改建使用库存材料');
+}
+function fishAchievementRect(id){const i=Object.keys(FISH_ACHIEVEMENTS).indexOf(id);return{x:36,y:278+i*180+112,w:W-72,h:36};}
+function drawFishAchievements(){
+  const j=fishJournal(),count=fishCollectionCount();uiBox(20,150,W-40,106);
+  txt('首期收藏 · 食用鱼与电鳗',36,180,18,C.cream,'800','left');
+  txt(`已发现 ${count}/2 · 已领 ${Object.values(j.achievementClaims).filter(Boolean).length}/2 项成就`,36,212,12,C.gold,'600','left');
+  ctx.fillStyle=C.surfaceRaised;roundRect(36,234,W-72,6,3);ctx.fill();if(count){ctx.fillStyle=C.gold;roundRect(36,234,(W-72)*count/2,6,3);ctx.fill();}
+  Object.entries(FISH_ACHIEVEMENTS).forEach(([id,a],i)=>{
+    const y=278+i*180,claimed=j.achievementClaims[id],ready=count>=a.need;uiBox(20,y,W-40,160,ready&&!claimed);
+    txt(a.name,36,y+26,18,C.cream,'800','left');
+    txt(id==='firstFish'?`发现任意1种鱼 · ${Math.min(count,1)}/1`:`集齐食用鱼、电鳗 · ${count}/2`,36,y+57,13,C.creamSoft,'600','left');
+    txt(`建造奖励：${rewardText(a.reward)}`,36,y+87,12,C.gold,'600','left');
+    uiButton(fishAchievementRect(id),claimed?'已领取':ready?'领取建造材料':'继续发现鱼种',claimed||!ready);
+  });
+  txt(state.fishAchievementNotice||(Object.values(j.achievementClaims).some(Boolean)?'已领奖励在统一库存中，可用于建造和升级':'先领取成就材料，再去建造使用'),20,662,11,C.gold,'600','left');
+  txt(`建材库存：木${state.materials.wood} · 塑${state.materials.plastic} · 铁${state.materials.iron}`,20,693,12,C.creamSoft,'600','left');
+  uiButton(achievementBuildRect(),'去建造 · 使用材料');uiButton(fishCodexRect('action'),'继续收集',true);
+}
+const EEL_POWER_SECONDS=300,EEL_POWER_BONUS=.2;
+function makeEelPower(raw){return{v:1,assembled:!!raw?.assembled,sourceUid:typeof raw?.sourceUid==='string'?raw.sourceUid:null,targetUid:typeof raw?.targetUid==='string'?raw.targetUid:null,remaining:Number.isFinite(raw?.remaining)?clamp(raw.remaining,0,EEL_POWER_SECONDS):0};}
+function eelPower(){return state.eelPower||(state.eelPower=makeEelPower());}
+function eelSource(){const p=eelPower(),e=p.sourceUid&&homeFindUid(p.sourceUid);return p.assembled&&e?.type==='power'?e:null;}
+function eelTarget(){const p=eelPower(),e=p.targetUid&&homeFindUid(p.targetUid);return e&&['purifier','kitchen'].includes(e.type)?e:null;}
+function eelWorkers(e){return e?catsAtFacility(`${e.r}_${e.c}`).filter(c=>!isExpeditionCat(c)):[];}
+function eelReady(e=eelTarget()){
+  return !!(eelSource()&&e&&eelWorkers(e).length&&state.supplies[e.type==='purifier'?'water':'food']<supplyCap());
+}
+function eelBoost(e){return e&&eelPower().remaining>0&&eelTarget()?.uid===e.uid&&eelReady(e)?1+EEL_POWER_BONUS:1;}
+function eelStatus(){
+  const p=eelPower(),e=eelTarget();if(!p.assembled)return '等待装配电鳗组件';if(!eelSource())return '组件已收好，等待安置动力室';
+  if(p.remaining<=0)return '待投喂 · 1条食用鱼供电5分钟';if(!e)return '电量保留中，请选择供电目标';
+  if(!eelWorkers(e).length)return '目标无人上岗，电量暂停消耗';
+  if(state.supplies[e.type==='purifier'?'water':'food']>=supplyCap())return '目标库存已满，电量暂停消耗';
+  return `${HOME_DEFS[e.type].name}生产＋20% · 剩余${Math.ceil(p.remaining)}秒`;
+}
+function assembleEelPower(){
+  if(!fishJournal().eelSeen){homeNotice('先钓到电鳗，解锁图纸');return false;}
+  const p=eelPower(),source=eelSource()||state.home.grid.find(e=>e?.type==='power');
+  if(!source){routePrepare('power');return false;}
+  if(!p.assembled){
+    if(fishJournal().eels<1||!canAfford(EEL_BLUEPRINT_COST)){homeNotice('需要活电鳗1、木8、塑4、铁3');return false;}
+    pay(EEL_BLUEPRINT_COST);fishJournal().eels--;p.assembled=true;
+  }
+  p.sourceUid=homeUid(source);state.eelPowerNotice='组件已装配，电鳗安置在水槽内';openEelPower();state.dirty=true;saveGame();return true;
+}
+function openEelPower(){state.eelPowerReturn=state.screen==='eelPower'?state.eelPowerReturn||'fishCodex':state.screen;state.screen='eelPower';state.aiming=false;}
+function eelSelectTarget(type){
+  const list=state.home.grid.filter(e=>e?.type===type);if(!list.length){state.eelPowerNotice=`先建${HOME_DEFS[type].name}`;return false;}
+  const p=eelPower(),current=list.findIndex(e=>e.uid===p.targetUid);
+  const chosen=current>=0?list[(current+1)%list.length]:list.find(e=>eelWorkers(e).length)||list[0];
+  p.targetUid=homeUid(chosen);state.eelPowerNotice='已接线，同类设施再次点击可切换';state.dirty=true;saveGame();return true;
+}
+function eelFeed(){
+  const p=eelPower();if(!eelSource()||!eelTarget()){state.eelPowerNotice='先装配组件，再选择供电目标';return false;}
+  if(p.remaining>0){state.eelPowerNotice='剩余电量尚未用完，不重复消耗鱼';return false;}
+  if(!eelReady()){state.eelPowerNotice='先安排目标岗位，并留出产物库存空间';return false;}
+  if(state.supplies.fish<1){state.eelPowerNotice='需要食用鱼1，活电鳗不会被吃掉';return false;}
+  state.supplies.fish--;p.remaining=EEL_POWER_SECONDS;state.eelPowerNotice='投喂成功，供电开始；不会消耗燃料';state.dirty=true;saveGame();return true;
+}
+function eelPowerRect(action){
+  if(action==='back')return{x:W-90,y:14,w:70,h:42};
+  if(action==='purifier'||action==='kitchen')return{x:20+(action==='kitchen'?(W-40)/2+4:0),y:450,w:(W-48)/2,h:42};
+  if(action==='staff')return{x:20,y:668,w:W-40,h:40};
+  if(action==='home')return{x:20,y:726,w:W-40,h:40};
+  return{x:20,y:608,w:W-40,h:46};
+}
+function eelPowerTouch(x,y){
+  const inside=b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h;
+  if(inside(eelPowerRect('back'))){state.screen=['home','ship'].includes(state.eelPowerReturn)?state.eelPowerReturn:'fishCodex';state.fishCodexTab='blueprints';return;}
+  for(const type of ['purifier','kitchen'])if(inside(eelPowerRect(type))){eelSelectTarget(type);return;}
+  if(inside(eelPowerRect('feed'))){eelFeed();return;}
+  if(inside(eelPowerRect('staff'))){const e=eelTarget();if(e)homeOpenStaffing(e);return;}
+  if(inside(eelPowerRect('home'))){state.screen='home';homeSwitchFloor(0);homeSetCategory('sailing');homeMode('build');state.home.selected='power';homeEnsureCatalog();if(eelSource())state.home.focusUid=eelSource().uid;}
+}
+function drawEelPowerScreen(){
+  uiBackground();txt('电鳗发电机',20,34,23,C.cream,'800','left');uiButton(eelPowerRect('back'),'返回',true);
+  const p=eelPower(),target=eelTarget();txt(`组件内活电鳗 ${p.assembled?1:0} · 食用鱼 ${state.supplies.fish}`,20,72,12,C.gold,'700','left');
+  txt('一座设备受益 · 净水或厨房任选其一',20,111,13,C.creamSoft,'600','left');
+  const floor=state.home.viewFloor;try{state.home.viewFloor=0;voyageScene(null);}finally{state.home.viewFloor=floor;}
+  for(const type of ['purifier','kitchen'])uiButton(eelPowerRect(type),`${target?.type===type?'✓ ':''}接${HOME_DEFS[type].name}`,target?.type!==type);
+  txt(eelStatus(),20,522,12,C.gold,'700','left');
+  if(target){const e=target,speed=eelWorkers(e).reduce((n,c)=>n+catWorkSpeed(c,e.type),0)*eelBoost(e),seconds=speed?Math.ceil(Math.max(0,PRODUCTION_TIME[e.type]-(e.progress||0))/speed):0;
+    txt(`目标 ${e.r+1},${e.c+1} · 在岗${eelWorkers(e).length}猫 · ${speed?`${seconds}秒后产出`:'等待上岗'}`,20,553,12,C.cream,'600','left');}
+  txt(state.eelPowerNotice||'无人、仓满时保留电量；暂停与离线不消耗',20,584,11,C.creamSoft,'600','left');
+  uiButton(eelPowerRect('feed'),p.remaining>0?(eelReady()?'供电中 · 不重复投喂':'电量保留中 · 不重复投喂'):'投喂食用鱼1 · 供电5分钟',p.remaining>0);
+  uiButton(eelPowerRect('staff'),'安排供电目标的岗位',true);uiButton(eelPowerRect('home'),'回家园查看设备与接线',true);
+}
+function makeFishJournal(raw,food=0){
+  const n=(v,max=99999)=>Number.isFinite(v)?clamp(Math.floor(v),0,max):0;
+  return{v:1,foodSeen:!!raw?.foodSeen||food>0||n(raw?.foodCatches)>0,
+    eelSeen:!!raw?.eelSeen||n(raw?.eels)>0||n(raw?.eelCatches)>0,
+    foodCatches:n(raw?.foodCatches),eelCatches:n(raw?.eelCatches),eels:n(raw?.eels,999),
+    eelMisses:n(raw?.eelMisses,4),unread:!!raw?.unread,legacyFood:!!raw?.legacyFood||(!raw&&food>0),
+    achievementClaims:Object.fromEntries(Object.keys(FISH_ACHIEVEMENTS).map(id=>[id,raw?.achievementClaims?.[id]===true]))};
+}
+function fishJournal(){const j=state.fishJournal||(state.fishJournal=makeFishJournal(null,state.supplies.fish||0));if(state.supplies.fish>0)j.foodSeen=true;return j;}
+function startFishDiscoverySample(){
+  if(globalThis.__fishDiscoverySample!==true)return false;
+  resetGame();state.materials={wood:80,plastic:50,iron:30};
+  state.home.deck=[];for(let r=2;r<=6;r++)for(let c=2;c<=6;c++)state.home.deck.push(`${r}_${c}`);
+  homePlace(2,2,'cabin');homePlace(2,5,'helm');state.materials={wood:30,plastic:20,iron:15};
+  state.supplies={food:5,water:5,fish:0};state.fishJournal=makeFishJournal(null,0);state.bandIndex=2;navigation().visited[2]=true;
+  state.tutorialDone=true;state.tutorialStep=4;state.segmentPanel=null;state.kitPanel=false;state.screen='salvage';state.paused=false;
+  state.segmentDone=Object.fromEntries(SEGMENT_KEYS.map(k=>[k,true]));navigation().cooldowns=[999999,999999,999999,999999];kitState().crateTimer=120;
+  state.spawnTimer=-999999;state.shoalTimer=400;state.debris=[];state.messageTimer=0;state.dirty=true;saveGame();
+  return true;
+}
+function prepareSampleEel(){
+  if(globalThis.__fishDiscoverySample!==true||fishJournal().eelSeen)return false;
+  if(state.debris.some(d=>d.fishSpecies==='eel'))return false;
+  spawnFish('eel');const d=state.debris[state.debris.length-1],a=hookAnchor();d.x=a.x;d.y=clamp(a.y+90,TOP_H+50,SEA_BOTTOM-32);d.vx=14;d.vy=0;d.fishLife=600;return true;
+}
+function startFishAchievementSample(){
+  if(globalThis.__fishAchievementSample!==true)return false;
+  startFishDiscoverySample();state.supplies.fish=1;fishJournal().foodSeen=true;prepareSampleEel();openFishCodex('achievements');saveGame();return true;
+}
+function startAchievementBuildSample(){
+  if(globalThis.__achievementBuildSample!==true)return false;
+  startFishAchievementSample();state.materials={wood:0,plastic:0,iron:0};state.fishJournal=makeFishJournal({foodSeen:true,eelSeen:true,eelCatches:1,eels:1},1);state.debris=[];
+  openFishCodex('achievements');saveGame();return true;
+}
+function startEelPowerSample(){
+  if(globalThis.__eelPowerSample!==true)return false;
+  resetGame();state.materials={wood:500,plastic:300,iron:200};state.home.deck=[];
+  for(let r=1;r<=8;r++)for(let c=1;c<=8;c++)state.home.deck.push(`${r}_${c}`);
+  for(const [type,r,c]of [['cabin',1,1],['purifier',1,4],['kitchen',4,1],['storage',7,1],['cabin',1,7],['clinic',4,7],['helm',7,7],['power',7,4]])homePlace(r,c,type);
+  state.home.viewFloor=1;homePlace(1,1,'bed');homePlace(1,2,'bed');state.home.viewFloor=0;
+  state.cats[0].job=null;state.cats[0].manualRest=true;
+  for(const [id,name,role,type]of [['eel_engineer','电工喵','engineer','purifier'],['eel_cook','灶台喵','cook','kitchen']]){
+    const cat={id,name,role,level:1,mood:80,energy:95,hunger:0,job:null,state:'idle',manualRest:false};ensureCatData(cat);state.cats.push(cat);assignCatToType(id,type);
+  }
+  state.materials={wood:30,plastic:20,iron:15};state.supplies={food:1,water:1,fish:3};state.fishJournal=makeFishJournal({eelSeen:true,eelCatches:1,eels:1,foodSeen:true},3);
+  state.tutorialDone=true;state.tutorialStep=4;state.segmentDone=Object.fromEntries(SEGMENT_KEYS.map(k=>[k,true]));state.segmentPanel=null;
+  state.paused=false;state.messageTimer=0;state.eelPowerNotice='';openFishCodex('blueprints');state.dirty=true;saveGame();return true;
+}
+function recordFishCatch(d){
+  if(d.fishRecorded)return false;d.fishRecorded=true;
+  const j=fishJournal(),eel=d.fishSpecies==='eel',fresh=eel?!j.eelSeen:!j.foodSeen;
+  if(eel){j.eelSeen=true;j.eelCatches=Math.min(99999,j.eelCatches+1);j.eels=Math.min(999,j.eels+1);j.eelMisses=0;}
+  else{j.foodSeen=true;j.foodCatches=Math.min(99999,j.foodCatches+1);if(state.bandIndex===2)j.eelMisses=Math.min(4,j.eelMisses+1);}
+  if(fresh){j.unread=true;state.message=eel?'首次捕获电鳗！发电组件图纸已解锁':'发现食用鱼！已登记钓鱼图鉴';state.messageTimer=4;}
+  state.dirty=true;return fresh;
+}
+function fishJournalEntryRect(){return{x:16,y:674,w:W-32,h:34};}
+function fishCodexRect(action){
+  if(action==='back')return{x:W-90,y:14,w:70,h:42};
+  const tabs=['fish','blueprints','achievements'];if(tabs.includes(action))return{x:20+tabs.indexOf(action)*(W-40+8)/3,y:88,w:(W-56)/3,h:42};
+  const i=Object.keys(FISH_JOURNAL_DEFS).indexOf(action);if(i>=0)return{x:20,y:148+i*92,w:W-40,h:80};
+  if(action==='action'&&state.fishCodexTab==='achievements')return{x:W/2+4,y:716,w:(W-48)/2,h:48};
+  return{x:20,y:716,w:W-40,h:48};
+}
+function openFishCodex(tab='fish'){
+  state.fishCodexReturn=state.screen==='fishCodex'?state.fishCodexReturn||'salvage':state.screen;
+  state.fishCodexTab=['blueprints','achievements'].includes(tab)?tab:'fish';state.fishCodexSelected=fishJournal().unread&&fishJournal().eelSeen?'eel':'food';state.fishAchievementNotice='';
+  state.screen='fishCodex';state.aiming=false;fishJournal().unread=false;state.dirty=true;saveGame();
+}
+function fishBlueprintStatus(){
+  const j=fishJournal();if(!j.eelSeen)return '首次捕获电鳗后解锁';
+  if(eelPower().assembled)return eelSource()?'已装配 · 活电鳗已安置':'组件已收好 · 可重新安置';
+  if(!homeCount('power'))return '已解锁 · 需要先建动力室';
+  if(!j.eels||Object.entries(EEL_BLUEPRINT_COST).some(([k,n])=>state.materials[k]<n))return '已解锁 · 配方材料尚未齐';
+  return '已解锁 · 材料齐，可以装配';
+}
+function fishCodexTouch(x,y){
+  const inside=b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h;
+  if(inside(fishCodexRect('back'))){state.screen=['salvage','ship','home','cat','map'].includes(state.fishCodexReturn)?state.fishCodexReturn:'salvage';return;}
+  for(const tab of ['fish','blueprints','achievements'])if(inside(fishCodexRect(tab))){state.fishCodexTab=tab;state.fishAchievementNotice='';return;}
+  if(state.fishCodexTab==='achievements'){
+    for(const id of Object.keys(FISH_ACHIEVEMENTS))if(inside(fishAchievementRect(id))){claimFishAchievement(id);return;}
+    if(inside(achievementBuildRect())){openAchievementBuild();return;}
+    if(inside(fishCodexRect('action')))state.screen='salvage';return;
+  }
+  if(state.fishCodexTab!=='blueprints'){
+    for(const id of Object.keys(FISH_JOURNAL_DEFS))if(inside(fishCodexRect(id))){state.fishCodexSelected=id;return;}
+    if(inside(fishCodexRect('action'))&&state.fishCodexSelected==='eel'&&fishJournal().eelSeen)state.fishCodexTab='blueprints';
+    return;
+  }
+  if(!inside(fishCodexRect('action'))||!fishJournal().eelSeen)return;
+  const power=state.home.grid.find(e=>e?.type==='power');
+  if(!power){routePrepare('power');return;}
+  if(eelSource()){openEelPower();return;}
+  assembleEelPower();
+}
+function drawFishCodex(){
+  uiBackground();txt('钓鱼图鉴',20,34,23,C.cream,'800','left');uiButton(fishCodexRect('back'),'返回',true);
+  const j=fishJournal();txt(`已发现 ${Number(j.foodSeen)+Number(j.eelSeen)}/2 · 图纸 ${j.eelSeen?1:0}/1`,20,67,12,C.gold,'600','left');
+  for(const tab of ['fish','blueprints','achievements'])uiButton(fishCodexRect(tab),tab==='fish'?'鱼种':tab==='blueprints'?'图纸':`成就${fishAchievementReadyCount()?' · 可领':''}`,state.fishCodexTab!==tab);
+  if(state.fishCodexTab==='achievements'){drawFishAchievements();return;}
+  if(state.fishCodexTab==='blueprints'){
+    uiBox(20,150,W-40,100);txt(j.eelSeen?'电鳗发电组件':'未知图纸',36,180,19,C.cream,'800','left');
+    txt(j.eelSeen?'发现电鳗后永久记录，不需要再抽图纸':'线索：沉船海域有带电的细长鱼影',36,215,12,C.creamSoft,'600','left');
+    if(j.eelSeen){
+      txt(fishBlueprintStatus(),20,282,13,C.gold,'700','left');
+      txt('动力室内改装 · 不额外占甲板',20,324,14,C.cream,'700','left');
+      txt(`前置：动力室 ${homeCount('power')?'已建成':'未建成'}`,20,366,14,C.creamSoft,'600','left');
+      txt(eelPower().assembled?`组件内安置1条 · 另保留${j.eels}条`:`活电鳗 1 · 当前保留 ${j.eels}`,20,408,14,C.creamSoft,'600','left');
+      let y=450;for(const [k,n]of Object.entries(EEL_BLUEPRINT_COST)){txt(`${resShort(k)} ${n} · 当前 ${state.materials[k]}`,20,y,14,state.materials[k]>=n?C.gold:C.creamSoft,'600','left');y+=36;}
+      txt(eelPower().assembled?'已装配，不重复消耗电鳗或装配材料':'装配消耗以上材料，活电鳗安置在组件内',20,608,12,C.gold,'700','left');
+      txt('电鳗独立保留，厨房和投喂不会消耗它',20,642,12,C.creamSoft,'600','left');
+      if(state.messageTimer>0)txt(state.message.slice(0,28),20,682,11,C.gold,'600','left');
+      uiButton(fishCodexRect('action'),eelSource()?'管理供电':!homeCount('power')?'去家园准备动力室':eelPower().assembled?'重新安置组件':'装配电鳗发电组件');
+    }else txt('钓到并回收上船，才会登记鱼种和图纸',20,294,13,C.creamSoft,'600','left');
+    return;
+  }
+  for(const [id,def]of Object.entries(FISH_JOURNAL_DEFS)){
+    const b=fishCodexRect(id),seen=id==='food'?j.foodSeen:id==='eel'?j.eelSeen:false;uiBox(b.x,b.y,b.w,b.h,state.fishCodexSelected===id);
+    ctx.save();ctx.translate(b.x+42,b.y+40);if(!seen)ctx.globalAlpha=.35;
+    if(id==='eel')drawElectricEel(!seen);else if(id==='food')drawFish(false);else{ctx.fillStyle=C.creamSoft;ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();}ctx.restore();
+    txt(id==='puffer'?'后续鱼种 · 未开放':seen?def.name:'未发现鱼种',b.x+83,b.y+25,16,C.cream,'700','left');
+    txt(id==='puffer'?'本轮先体验电鳗':seen?`捕获 ${id==='eel'?j.eelCatches:j.foodCatches} 次${id==='eel'?` · 保留${j.eels} / 安置${eelPower().assembled?1:0}`:''}`:id==='eel'?'线索：沉船海域鱼群':'线索：各海域鱼群',b.x+83,b.y+54,12,C.creamSoft,'600','left');
+  }
+  const id=state.fishCodexSelected||'food',def=FISH_JOURNAL_DEFS[id],seen=id==='food'?j.foodSeen:id==='eel'?j.eelSeen:false;
+  uiBox(20,448,W-40,222);txt(seen?def.name:id==='puffer'?'后续鱼种':'等待首次捕获',36,479,19,C.gold,'800','left');
+  txt(def.source,36,520,12,C.creamSoft,'600','left');
+  txt(seen?def.use:id==='puffer'?'当前不参与发现进度':'成功捕获后揭晓用途与关联图纸',36,556,12,C.cream,'600','left');
+  txt(id==='eel'&&seen?'图纸已解锁，使用电鳗后记录仍保留':id==='food'&&j.legacyFood?'旧库存已登记，历史捕获次数未补算':'发现记录永久保留，未持有也可以查看',36,600,11,C.creamSoft,'600','left');
+  if(id==='eel'&&seen)uiButton(fishCodexRect('action'),'查看已解锁的发电组件图纸');
+}
+
 // ================= 布局 =================
 const TOP_H = 116;
 const SEA_BOTTOM = 548;
@@ -382,6 +748,7 @@ const HOME_DEFS = {
   rainbarrel: { name: '雨水收集器', kind: 'furn', size: 1, cost: { wood: 5, plastic: 3 }, desc: '水+1/120s', effect: 'water' },
   fence: { name: '护栏', kind: 'furn', size: 1, cost: { wood: 6, iron: 2 }, desc: '风浪损失减半', effect: 'fence' },
   searchlight: { name: '探照灯', kind: 'furn', size: 1, cost: { wood: 6, iron: 4 }, desc: '远处目标可见', effect: 'light' },
+  ballista: { name: '鱼叉炮台', kind: 'furn', size: 1, maxLevel: 1, cost: { wood: 8, iron: 4 }, desc: '1猫守一侧 · 搬迁可换射界', effect: 'guard' },
 };
 
 
@@ -544,6 +911,7 @@ function routeUnlocked(i) {
   return homeCount('net') > 0;
 }
 function routeBlockReason(i) {
+  if(fortBusy())return '先完成护船布防遭遇，再出航';
   if(defenseActive()&&!['ready','done'].includes(state.defense.phase))return '先完成这次护船遭遇，再切换航线';
   if (!Number.isInteger(i) || !ROUTES[i]) return '请选择有效航线';
   if (navigation().travel) return '正在航行，请等抵达后再选航线';
@@ -1084,7 +1452,7 @@ function placeHomeStairs(cabin, r, c) {
   if (reason) return homeNotice(reason);
   if (cabin.stairs) {
     const cost = buildCost(HOME_DEFS.stairs);
-    if (!canAfford(cost)) return homeNotice('补接楼梯还缺材料');
+    if (!canAfford(cost)) return homeNotice(materialShortage(cost));
     pay(cost); (cabin.stairs.links || (cabin.stairs.links = [1])).push(floor); state.dirty = true; saveGame();
     homeNotice(`${homeFloorName(floor)}的向上楼梯已补接`); return true;
   }
@@ -1095,7 +1463,7 @@ function placeHomeStairs(cabin, r, c) {
   const access = homeInteriorAccessReason(cabin, 1, null, null, { r, c });
   if (access) return homeNotice(access);
   const cost = buildCost(HOME_DEFS.stairs);
-  if (!canAfford(cost)) return homeNotice('楼梯还缺木板或塑料');
+  if (!canAfford(cost)) return homeNotice(materialShortage(cost));
   cabin.stairs = { r, c, links: [1] }; pay(cost); state.dirty = true; saveGame();
   homeNotice('楼梯建成，选「升级」即可加层'); return true;
 }
@@ -1129,6 +1497,7 @@ function homeStairMoveReason(cabin, r, c) {
 }
 function homeFloorLift(floor) { return Math.max(0, floor - 1) * 26 * homeViewScale(); }
 function homeMoveReason(e, r, c, floor, w, h) {
+  if(e&&['ballista','fence'].includes(e.type)&&fortBusy())return '遭遇中不能搬动防线，结束后再调整';
   if (!e) return '搬迁目标不存在';
   if(['helm','power'].includes(e.type)&&navigation().travel)return `主船正在航行，抵达后再搬${HOME_DEFS[e.type].name}`;
   if(e.type==='hook'&&homeRigBusy()&&homeRigMount().uid===e.uid)return '抓钩正在使用，收回后再搬迁抓钩台';
@@ -1205,7 +1574,7 @@ function commitHomePreview() {
   const p = state.home.preview, reason = homePreviewReason(p);
   if (reason) return homeNotice(reason);
   const cost = homePreviewCost(p);
-  if (cost && !canAfford(cost)) return homeNotice('材料不足，请先收集预览中的费用');
+  if (cost && !canAfford(cost)) return homeNotice(materialShortage(cost));
   let result;
   if (p.floor !== (state.home.viewFloor || 1)) return homeNotice('楼层已切换，请重新选择目标位置');
   if (p.action === 'move') result = moveHomeEntry(homeFindUid(p.uid), p.r, p.c, p.rotate, p.floor);
@@ -1429,6 +1798,7 @@ function homeCanPlace(r, c, type) {
   return true;
 }
 function homePlace(r, c, type) {
+  if(type==='ballista'&&fortBusy()&&state.fortification.phase!=='intermission')return homeNotice('先在两波间隙或遭遇前布置炮台');
   const def = HOME_DEFS[type];
   if (!def) return;
   if (type === 'stairs') return placeHomeStairs(cabinAt(r, c, 1), r, c);
@@ -1436,8 +1806,7 @@ function homePlace(r, c, type) {
   if (!homeCanPlace(r, c, type)) { state.message = '这里放不下：房间要放在甲板上'; state.messageTimer = 1.6; return; }
   const cost = buildCost(def);
   if (!canAfford(cost)) {
-    const missing = Object.keys(cost).filter(k => resCount(k) < cost[k]).map(k => `${resShort(k)}${cost[k] - resCount(k)}`).join('、');
-    state.message = `还缺${missing}，去打捞收集`; state.messageTimer = 2; return;
+    return homeNotice(materialShortage(cost));
   }
   pay(cost);
   if (type === 'cabin' && state.cats.length === 1) state.catGuarantee = true;
@@ -1532,7 +1901,7 @@ const HOME_CATEGORIES={
   living:{name:'居住生活',keys:['bed','table','plant','clinic','recruit']},
   production:{name:'食水生产',keys:['purifier','kitchen','compost','garden','net','fishcage','rainbarrel']},
   storage:{name:'加工储存',keys:['storage','cabinet','icebox','workbench']},
-  sailing:{name:'航行作业',keys:['helm','hook','dock','fence','searchlight','power']}
+  sailing:{name:'航行作业',keys:['helm','hook','dock','fence','searchlight','power','ballista']}
 };
 function homeCategoryOf(type){return Object.keys(HOME_CATEGORIES).find(k=>HOME_CATEGORIES[k].keys.includes(type))||null;}
 function homeCatalogCategory(){return HOME_CATEGORIES[state.home.category]?state.home.category:homeCategoryOf(state.home.selected)||'structure';}
@@ -1609,7 +1978,7 @@ function homeFacilities() {
   const out = [];
   for (const e of state.home.grid) {
     if (!e) continue;
-    if (e.type === 'purifier' || e.type === 'kitchen' || e.type === 'hook' || e.type === 'dock' || e.type === 'net' || e.type === 'clinic') {
+    if (e.type === 'purifier' || e.type === 'kitchen' || e.type === 'hook' || e.type === 'dock' || e.type === 'net' || e.type === 'clinic' || e.type === 'ballista') {
       out.push({ r: e.r, c: e.c, type: e.type, key: `${e.r}_${e.c}`, level: e.level || 1, slots: e.type==='hook'?1:Math.min(3, e.level || 1) });
     }
   }
@@ -1672,7 +2041,7 @@ function upgradeFacility(entry) {
     const reason = homePlacementReason(entry.r, entry.c, dimensions.w, dimensions.h, entry);
     if (reason) return homeNotice(`扩建失败：${reason}，可先搬迁或旋转`);
   }
-  if (!canAfford(cost)) { state.message = '材料不够升级'; state.messageTimer = 1.4; return; }
+  if (!canAfford(cost)) return homeNotice(materialShortage(cost));
   pay(cost);
   if(entry.type==='hook'){
     entry.rigPaid=entry.rigPaid||{...HOME_DEFS.hook.cost};for(const k of Object.keys(cost))entry.rigPaid[k]=(entry.rigPaid[k]||0)+cost[k];
@@ -1692,6 +2061,7 @@ function upgradeFacility(entry) {
   saveGame();
 }
 function removeFacility(entry) {
+  if(entry&&['ballista','fence'].includes(entry.type)&&fortBusy())return homeNotice('遭遇中不能拆除防线');
   const def = entry && HOME_DEFS[entry.type];
   if (!def || def.kind === 'deck') return;
   if(['helm','power'].includes(entry.type)&&navigation().travel)return homeNotice(`主船正在航行，抵达后再拆${HOME_DEFS[entry.type].name}`);
@@ -1717,6 +2087,9 @@ function removeFacility(entry) {
     if(reason)return homeNotice(reason);
   }
   if(entry.type==='bed'&&homeCapacityReport(entry).total<state.cats.length)return homeNotice('居民正在使用这张床，请先在住舱增设床位');
+  const powerState=eelPower();
+  if(powerState.sourceUid===entry.uid){powerState.sourceUid=null;state.eelPowerNotice='组件与剩余电量已收好，可安置到另一动力室';}
+  if(powerState.targetUid===entry.uid){powerState.targetUid=null;state.eelPowerNotice='供电目标已拆除，剩余电量保留';}
   const idx = homeIdx(entry.r, entry.c);
   if (entry.floor) state.home.upper = state.home.upper.filter(e => e !== entry);
   else state.home.grid[idx] = null;
@@ -1753,7 +2126,9 @@ function autoAssignCats() {
   }
 }
 function assignCatToType(catId, type) {
-  const f = homeFacilities().find((x) => x.type === type && catsAtFacility(x.key).length < x.slots);
+  const facilities=homeFacilities();
+  const target=type==='ballista'&&facilities.find(x=>x.type===type&&x.key===state.home.fortStaffTarget);
+  const f = target||facilities.find((x) => x.type === type && catsAtFacility(x.key).length < x.slots);
   if (!f) {
     const typeName = { hook:'抓钩台', purifier: '净水房', kitchen: '厨房', net: '渔网架', clinic: '医务室', dock: '小船坞' }[type] || '该设施';
     state.message = `先建${typeName}或升级加槽`;
@@ -1790,16 +2165,17 @@ function assignCat(catId, key) {
 }
 function catActionKeys() {
   const built=new Set(homeFacilities().map(f=>f.type));
-  return ['hook','purifier','kitchen','net','clinic','dock'].filter(k=>built.has(k)).concat(['rest','rename']);
+  return ['hook','purifier','kitchen','net','clinic','dock','ballista'].filter(k=>built.has(k)).concat(['rest','rename']);
 }
 function catActionRect(key) {
   const i=catActionKeys().indexOf(key);if(i<0)return null;
   const w=(W-44)/3;return {x:16+(i%3)*(w+6),y:H-230+Math.floor(i/3)*49,w,h:44};
 }
-function homeStaffingType(e) { return e&&['hook','purifier','kitchen','net','clinic','dock'].includes(e.type)?e.type:null; }
+function homeStaffingType(e) { return e&&['hook','purifier','kitchen','net','clinic','dock','ballista'].includes(e.type)?e.type:null; }
 function homeOpenStaffing(e) {
   if(e?.type==='helm'){state.screen='map';state.messageTimer=0;return true;}
   const type=homeStaffingType(e);if(!type)return false;
+  if(type==='ballista')state.home.fortStaffTarget=`${e.r}_${e.c}`;
   state.screen='cat';
   const cat=state.cats.find(c=>!c.job&&!isExpeditionCat(c))||state.cats[0];
   if(cat){state.home.catSelected=cat.id;state.home.catPage=Math.floor(state.cats.indexOf(cat)/4);}
@@ -1958,7 +2334,7 @@ function facilityRate(type) {
   let speed = 0;
   for (const f of homeFacilities()) {
     if (f.type !== type) continue;
-    for (const cat of catsAtFacility(f.key)) if (!isExpeditionCat(cat)) speed += catWorkSpeed(cat, type);
+    for (const cat of catsAtFacility(f.key)) if (!isExpeditionCat(cat)) speed += catWorkSpeed(cat, type)*eelBoost(state.home.grid[homeIdx(f.r,f.c)]);
   }
   return speed * 60 / need;
 }
@@ -1976,7 +2352,9 @@ function catProduction(dt) {
     let speed = 0;
     for (const cat of cats) { speed += catWorkSpeed(cat, f.type); gainCat(cat, f.type, dt * 0.4); }
     const e = state.home.grid[homeIdx(f.r, f.c)];
-    e.progress = (e.progress || 0) + dt * speed;
+    const p=eelPower(),powered=eelBoost(e)>1?Math.min(dt,p.remaining):0;
+    e.progress = (e.progress || 0) + dt * speed + powered*speed*EEL_POWER_BONUS;
+    if(powered>0){const before=Math.ceil(p.remaining/5);p.remaining=Math.max(0,p.remaining-powered);if(Math.ceil(p.remaining/5)!==before||p.remaining===0)state.dirty=true;}
     const need = PRODUCTION_TIME[f.type] || 60;
     if (e.progress >= need) {
       e.progress -= need;
@@ -2264,6 +2642,9 @@ function saveGame() {
     wx.setStorageSync(SAVE_KEY, JSON.stringify({
       v: 3,
       skin:state.skin,
+      appearance:appearance(),
+      fishJournal:fishJournal(),
+      eelPower:eelPower(),
       grid: state.grid,
       materials: state.materials,
       supplies: state.supplies,
@@ -2279,6 +2660,7 @@ function saveGame() {
       homeRigVersion: 1,
       salvageKit: kitState(),
       defenseSample: defenseActive() ? state.defense : null,
+      fortification:state.fortification||null,
       salvageKitSample: globalThis.__salvageKitSample===true&&!!state.kitSampleReady,
       homeRigPending: !!state.home.rigPending,
       homeLegacyBerths: state.home.legacyBerths || 0,
@@ -2322,6 +2704,7 @@ function loadGame() {
     if (!raw) return false;
     const d = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!d || d.v !== 3) return false;
+    state.fortification=makeFortification(d.fortification);
     state.defense=globalThis.__defenseSample===true ? makeDefense(d.defenseSample) : null;
     state.salvageKit=makeKit(d.salvageKit);state.kitPanel=false;state.kitSlot=0;
     state.kitSampleReady=globalThis.__salvageKitSample===true&&d.salvageKitSample===true;
@@ -2330,9 +2713,11 @@ function loadGame() {
     state.grid = valid ? d.grid.slice() : (() => { const g = Array(25).fill(null); g[12] = 'deck'; return g; })();
     if (!state.grid[12]) state.grid[12] = 'deck';
     state.skin=UI_SKINS[d.skin]?d.skin:'ocean';Object.assign(C,UI_SKINS[state.skin]);
+    state.appearance=makeAppearance(d.appearance,d.skin);
     state.materials = { wood: d.materials.wood | 0, plastic: d.materials.plastic | 0, iron: d.materials.iron | 0 };
     // Capacity is known only after restoring home buildings below.
     state.supplies = { food: Math.max(0, d.supplies.food | 0), water: Math.max(0, d.supplies.water | 0), fish: Math.max(0, d.supplies.fish | 0) };
+    state.fishJournal=makeFishJournal(d.fishJournal,state.supplies.fish);
     state.fishMeals = clamp(d.fishMeals | 0, 0, 99);
     state.shoalTimer = clamp(+d.shoalTimer || 90, 10, 400);
     state.cageTimer = clamp(+d.cageTimer || 0, 0, 400);
@@ -2348,6 +2733,9 @@ function loadGame() {
     state.home.deck = Array.isArray(d.homeDeck) && d.homeDeck.length ? d.homeDeck.slice() : (() => { const a = []; for (let r = 3; r <= 5; r++) for (let c = 3; c <= 5; c++) a.push(r + '_' + c); return a; })();
     state.home.upper = Array.isArray(d.homeUpper) ? d.homeUpper.filter(e => e && homeIndoorType(e.type) && Number.isInteger(e.r) && Number.isInteger(e.c) && e.r >= 0 && e.c >= 0 && e.r < 9 && e.c < 9 && [1,2,3].includes(e.floor)) : [];
     initializeSpatialHome(!d.homeSpatialVersion);
+    state.eelPower=makeEelPower(d.eelPower);
+    if(!eelSource())state.eelPower.sourceUid=null;
+    if(!eelTarget())state.eelPower.targetUid=null;
     state.home.rigPending=!!d.homeRigPending;
     const addedInitialRig=ensureInitialRig(!d.homeRigVersion);
     state.home.upper = state.home.upper.filter(e => { const cabin = cabinAt(e.r, e.c, e.floor); return cabin && cabin.uid === e.supportId; });
@@ -2394,10 +2782,14 @@ function loadGame() {
     state.supplies.water = clamp(state.supplies.water, 0, supplyCap());
     state.message = state.home.rigPending?'甲板已满，腾出1格可免费安置抓钩架':addedInitialRig?'手摇架已正式安置，可安排1只猫、搬迁和升级':migratedHookJobs?'旧抓取岗已接入现有抓钩架':'已恢复上次航行';
     state.messageTimer = 2;
+    if(state.fortification&&!['ready','done'].includes(state.fortification.phase))state.screen='guard';
     return true;
   } catch (e) { return false; }
 }
 function resetGame() {
+  state.eelPower=makeEelPower();state.eelPowerNotice='';
+  state.fishJournal=makeFishJournal(null,0);
+  state.fortification=null;
   state.logbookOpen=false;state.logbookIndex=0;state.logbookPage=0;
   state.defense=null;
   state.kitSampleReady=false;
@@ -2548,11 +2940,17 @@ function spawnOilBarrel() {
     forcedKind: null,
   });
 }
-function spawnFish() {
-  const big = Math.random() < 0.2;
+function rollFishSpecies(){
+  const j=fishJournal();
+  if(state.bandIndex!==2||j.eels>=999||state.debris.some(d=>d.fishSpecies==='eel')||state.hook.hold?.fishSpecies==='eel')return 'food';
+  return j.eelMisses>=4||Math.random()<.18?'eel':'food';
+}
+function spawnFish(forcedSpecies) {
+  const species=forcedSpecies==='eel'?'eel':forcedSpecies==='food'?'food':rollFishSpecies(),eel=species==='eel';
+  const big = !eel&&Math.random() < 0.2;
   state.debris.push({
-    key: 'fish', fish: true, big,
-    def: { label: big ? '大鱼' : '鱼', r: big ? 20 : 16, retract: big ? 0.9 : 1.1, value: {} },
+    key: 'fish', fish: true, fishSpecies:species, big,
+    def: { label: eel?'电鳗':big ? '大鱼' : '鱼', r: eel?24:big ? 20 : 16, retract: eel?.85:big ? 0.9 : 1.1, value: {} },
     x: rand(34, W - 34), y: rand(TOP_H + 46, SEA_BOTTOM - 60),
     vx: rand(38, 68) * (Math.random() < 0.5 ? -1 : 1), vy: rand(-10, 10),
     rot: 0, rotDir: 0, glow: big, scale: 1, foam: rand(0, Math.PI * 2),
@@ -2947,6 +3345,142 @@ function drawDefenseResult(){
   const b=defenseButtonRect('bank');ctx.fillStyle='#AA6545';roundRect(b.x,b.y,b.w,b.h,6);ctx.fill();txt('收好物资 · 结束演练',W/2,b.y+23,13,C.cream,'800');
 }
 
+// 护船布防：设施与岗位决定火力，抓钩不参与攻击。
+function makeFortification(raw){
+  if(!raw||raw.v!==1)return null;
+  const n=(x,max)=>clamp(Number(x)||0,0,max),amount=o=>Object.fromEntries(['wood','plastic','iron'].map(k=>[k,Math.floor(n(o?.[k],999))]));
+  const phases=['ready','warning','approach','windup','intermission','rescue','result','done'];
+  let cap=2;const payload={};for(const k of ['wood','plastic','iron']){payload[k]=Math.min(cap,Math.floor(n(raw.payload?.[k],2)));cap-=payload[k];}
+  return{v:1,phase:phases.includes(raw.phase)?raw.phase:'ready',wave:Math.floor(n(raw.wave,1)),timer:n(raw.timer,12),hp:n(raw.hp,3),
+    cargo:amount(raw.cargo),payload,dropped:Math.floor(n(raw.dropped,2)),recovered:Math.floor(n(raw.recovered,2)),lost:Math.floor(n(raw.lost,2)),repelled:Math.floor(n(raw.repelled,2)),impacts:Math.floor(n(raw.impacts,2)),
+    tactic:['volley','shield'].includes(raw.tactic)?raw.tactic:null,shield:!!raw.shield,shieldUsed:!!raw.shieldUsed,protected:!!raw.protected,
+    rescueStatus:['sea','hauling','recovered','expired'].includes(raw.rescueStatus)?raw.rescueStatus:'sea',haul:n(raw.haul,3),rescueRemaining:n(raw.rescueRemaining,8),
+    banked:!!raw.banked,actual:amount(raw.actual),overflow:amount(raw.overflow),shots:Math.floor(n(raw.shots,999)),reloads:Object.fromEntries(Object.entries(raw.reloads||{}).slice(0,81).filter(([k])=>/^home_\d+$/.test(k)).map(([k,v])=>[k,n(v,2.8)])),flash:0,flashSide:'left',sample:!!raw.sample};
+}
+function fortState(){return state.fortification||(state.fortification=makeFortification({v:1,phase:'ready',cargo:{}}));}
+function fortBusy(){return !!state.fortification&&!['ready','result','done'].includes(state.fortification.phase);}
+function fortSide(e){return e.c<e.r?'left':'right';}
+function fortSideName(side){return side==='left'?'左舷':'右舷';}
+function fortFacilities(side){return homeFacilities().filter(f=>f.type==='ballista'&&(!side||fortSide(f)===side));}
+function fortGunners(side){return fortFacilities(side).map(f=>({f,e:facilityEntry(f.key),cat:catsAtFacility(f.key).find(c=>!isExpeditionCat(c)&&c.energy>12)})).filter(x=>x.cat);}
+function fortWaveSide(){return fortState().wave===0?'left':'right';}
+function fortOpen(){if(defenseActive()){homeNotice('请从独立布防样例试玩新战斗');return false;}fortState();state.screen='guard';state.aiming=false;state.messageTimer=0;saveGame();return true;}
+function fortPrepare(side){
+  const existing=fortFacilities(side)[0];
+  if(existing){const e=facilityEntry(existing.key);homeOpenStaffing(e);const cat=catsAtFacility(existing.key)[0];if(cat)state.home.catSelected=cat.id;return true;}
+  if(fortBusy()&&fortState().phase!=='intermission')return homeNotice('本波结束后可添置炮台，现有岗位可随时查看');
+  state.screen='home';homeSwitchFloor(0);homeSetCategory('sailing');homeMode('build');state.home.selected='ballista';homeEnsureCatalog();
+  const site=state.home.deck.map(k=>{const [r,c]=k.split('_').map(Number);return{r,c};}).find(p=>fortSide(p)===side&&!homePlacementReason(p.r,p.c,1,1));
+  if(site)state.home.preview={action:'place',type:'ballista',...site,w:1,h:1,floor:1};
+  homeNotice(site?`已预览${fortSideName(side)}炮台，确认后扣木8铁4`:'这一侧没有空位，可先扩甲板或搬迁设施');return true;
+}
+function fortBegin(){
+  const d=fortState();if(d.phase!=='ready'||navigation().travel||homeRigBusy()||state.aiming)return false;
+  if(!fortFacilities().length){homeNotice('先建一座鱼叉炮台，再开始布防遭遇');return false;}
+  Object.assign(d,{phase:'warning',wave:0,timer:3+(homeCount('searchlight')?2:0),hp:3,protected:homeCount('fence')>0,reloads:{}});state.dirty=true;saveGame();return true;
+}
+function fortNext(){const d=fortState();if(d.wave>=1){d.phase='result';d.timer=0;}else{d.phase='intermission';d.timer=4;}state.dirty=true;saveGame();}
+function fortRepel(){const d=fortState();d.repelled++;d.flash=.5;fortNext();}
+function fortAction(action){
+  const d=fortState();if(action==='start')return fortBegin();
+  if(action==='home'&&d.phase==='done'){state.screen='home';return true;}
+  if(action==='left'||action==='right')return fortPrepare(action);
+  if(action==='continue'&&d.phase==='intermission'){d.wave=1;d.phase='warning';d.hp=3;d.timer=3+(homeCount('searchlight')?2:0);saveGame();return true;}
+  if(action==='volley'&&!d.tactic&&['approach','windup'].includes(d.phase)){
+    const gunner=fortGunners(fortWaveSide())[0];if(!gunner){homeNotice('来袭一侧没有可用的在岗炮手，齐射未消耗');return false;}
+    d.tactic='volley';d.hp=Math.max(0,d.hp-2);d.shots++;d.flash=.5;d.flashSide=fortWaveSide();gunner.cat.energy=Math.max(0,gunner.cat.energy-.6);if(d.hp<=0)fortRepel();saveGame();return true;
+  }
+  if(action==='shield'&&!d.tactic&&['warning','approach','windup'].includes(d.phase)){d.tactic='shield';d.shield=true;saveGame();return true;}
+  if(action==='rescue'&&d.phase==='rescue'&&d.rescueStatus==='sea'&&d.rescueRemaining>0){d.rescueStatus='hauling';d.haul=3;saveGame();return true;}
+  if(action==='bank'&&d.phase==='result'&&!d.banked){
+    for(const k of ['wood','plastic','iron']){const got=Math.min(d.cargo[k],Math.max(0,999-state.materials[k]));state.materials[k]+=got;d.actual[k]=got;d.overflow[k]=d.cargo[k]-got;d.cargo[k]=0;}
+    d.banked=true;d.phase='done';state.dirty=true;saveGame();return true;
+  }
+  if(action==='restart'&&d.phase==='done'&&globalThis.__fortificationSample===true)return startFortificationSample();
+  return false;
+}
+function updateFortification(dt){
+  const d=state.fortification;if(!d)return;d.flash=Math.max(0,d.flash-dt);
+  if(['ready','result','done'].includes(d.phase))return;
+  if(d.phase==='rescue'){
+    if(d.rescueStatus==='hauling'){
+      d.haul=Math.max(0,d.haul-dt);if(d.haul<=1e-7){for(const k of ['wood','plastic','iron'])d.cargo[k]+=d.payload[k];d.recovered+=Object.values(d.payload).reduce((a,b)=>a+b,0);d.payload={wood:0,plastic:0,iron:0};d.rescueStatus='recovered';fortNext();}
+    }else{d.rescueRemaining=Math.max(0,d.rescueRemaining-dt);if(d.rescueRemaining<=1e-7){d.lost+=Object.values(d.payload).reduce((a,b)=>a+b,0);d.payload={wood:0,plastic:0,iron:0};d.rescueStatus='expired';fortNext();}}
+    state.dirty=true;return;
+  }
+  if(d.phase==='intermission'){d.timer=Math.max(0,d.timer-dt);if(d.timer<=1e-7)fortAction('continue');state.dirty=true;return;}
+  if(['approach','windup'].includes(d.phase)){
+    const side=fortWaveSide();
+    for(const {e,cat}of fortGunners(side)){
+      const id=homeUid(e);d.reloads[id]=Math.max(0,(d.reloads[id]||0)-dt);
+      if(d.reloads[id]<=1e-7){d.reloads[id]=2.8;d.hp=Math.max(0,d.hp-1);d.shots++;d.flash=.4;d.flashSide=side;cat.energy=Math.max(0,cat.energy-.5);state.dirty=true;if(d.hp<=0){fortRepel();return;}}
+    }
+  }
+  d.timer=Math.max(0,d.timer-dt);if(d.timer>1e-7){state.dirty=true;return;}
+  if(d.phase==='warning'){d.phase='approach';d.timer=4;}
+  else if(d.phase==='approach'){d.phase='windup';d.timer=3;}
+  else if(d.phase==='windup'){
+    d.impacts++;d.flash=.5;d.protected=d.protected||homeCount('fence')>0;
+    if(d.shield){d.shield=false;d.shieldUsed=true;fortNext();return;}
+    let remaining=Math.max(0,(d.protected?1:2)-d.dropped);d.payload={wood:0,plastic:0,iron:0};
+    for(const k of ['wood','plastic','iron']){const n=Math.min(remaining,d.cargo[k]);d.cargo[k]-=n;d.payload[k]=n;d.dropped+=n;remaining-=n;}
+    if(Object.values(d.payload).some(n=>n>0)){d.phase='rescue';d.rescueStatus='sea';d.rescueRemaining=8;d.haul=0;}
+    else fortNext();
+  }
+  state.dirty=true;saveGame();
+}
+function fortRect(action){
+  if(action==='pause')return{x:W-72,y:18,w:52,h:40};
+  if(action==='left'||action==='right')return{x:W-94,y:action==='left'?454:492,w:74,h:32};
+  if(action==='volley'||action==='shield')return{x:action==='volley'?20:W/2+4,y:570,w:W/2-24,h:48};
+  return{x:20,y:action==='rescue'?570:680,w:W-40,h:48};
+}
+function fortTouch(x,y){
+  const d=fortState(),inside=b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h;
+  if(inside(fortRect('pause'))){state.paused=true;return;}
+  if(d.phase==='rescue'&&inside(fortRect('rescue'))){fortAction('rescue');return;}
+  for(const action of ['left','right','volley','shield'])if(inside(fortRect(action))){if(d.phase==='rescue'&&['volley','shield'].includes(action))fortAction('rescue');else fortAction(action);return;}
+  if(inside(fortRect('start')))fortAction({ready:'start',intermission:'continue',result:'bank',done:d.sample?'restart':'home'}[d.phase]);
+}
+function drawFortification(){
+  const d=fortState(),side=fortWaveSide(),name=fortSideName(side),stages={ready:'先布置炮台并安排猫上岗',warning:`第${d.wave+1}波 · ${name}预警 ${Math.ceil(d.timer)}秒`,approach:`${name}敌人靠近 · 炮台自动迎敌`,windup:`${name}准备冲撞 · ${d.timer.toFixed(1)}秒`,intermission:`本波结束 · ${Math.ceil(d.timer)}秒后右舷来袭`,rescue:d.rescueStatus==='hauling'?`正在收回浮货 · ${Math.ceil(d.haul)}秒`:`浮货包落水 · 还剩${d.rescueRemaining.toFixed(1)}秒`,result:'两波结束 · 清点待入库物资',done:'物资已入库 · 本次演练结束'};
+  uiBackground();txt('护船布防',20,32,22,C.cream,'800','left');uiButton(fortRect('pause'),'暂停',true);
+  txt('第1波左舷 → 第2波右舷',20,74,13,C.creamSoft,'600','left');txt(stages[d.phase],20,111,14,C.gold,'700','left');
+  const view=state.home.viewFloor;state.home.viewFloor=0;voyageScene(null);state.home.viewFloor=view;
+  if(['warning','approach','windup'].includes(d.phase)){
+    const x=side==='left'?46:W-46,y=315;ctx.save();ctx.translate(x,y);if(side==='right')ctx.scale(-1,1);
+    ctx.fillStyle=d.flash>0?C.gold:'#688B89';ctx.strokeStyle=C.ink;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,0,24,12,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-19,0);ctx.lineTo(-35,-14);ctx.lineTo(-35,14);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=C.ink;ctx.beginPath();ctx.arc(14,-3,2,0,Math.PI*2);ctx.fill();ctx.restore();
+    txt(`${name} · 驱离还需${d.hp}击`,W/2,170,12,C.cream,'700');
+    if(d.phase==='windup'){ctx.strokeStyle=C.coral;ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,34,0,Math.PI*2*clamp(d.timer/3,0,1));ctx.stroke();}
+    if(d.flash>0){ctx.strokeStyle=C.gold;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(W/2+(side==='left'?-35:35),280);ctx.lineTo(x,y);ctx.stroke();}
+  }
+  if(d.phase==='rescue'){ctx.fillStyle=C.woodLight;ctx.strokeStyle=C.gold;ctx.lineWidth=2;roundRect(W/2-18,365,36,28,5);ctx.fill();ctx.stroke();txt(d.rescueStatus==='hauling'?'已系住 · 不再漂远':'待抢救浮货包',W/2,416,12,C.gold,'700');}
+  uiBox(14,444,W-28,91);
+  for(const [s,y]of [['left',474],['right',512]]){const fs=fortFacilities(s),staff=fortGunners(s).length;txt(`${fortSideName(s)}：炮台${fs.length} · 在岗${staff}`,28,y,13,C.cream,'700','left');uiButton(fortRect(s),fs.length?'岗位':'建炮台',true);}
+  if(d.phase==='rescue'){uiButton(fortRect('rescue'),d.rescueStatus==='hauling'?'救援绳回收中':'系救援绳 · 3秒收回');}
+  else{txt(`本次战术：${d.tactic?d.tactic==='volley'?'齐射已用':'护货已用':'遭遇中可选一次'}`,20,554,12,C.gold,'700','left');uiButton(fortRect('volley'),'集中齐射',!!d.tactic||!['approach','windup'].includes(d.phase));uiButton(fortRect('shield'),d.shield?'护货已待命':'护住货物',!!d.tactic||!['warning','approach','windup'].includes(d.phase));}
+  txt(state.messageTimer>0?state.message.slice(0,27):d.phase==='ready'?'炮台箭头指向守卫侧；可回家园搬迁调整':'打开家园或岗位时暂停遭遇，回来继续',20,646,11,state.messageTimer>0?C.gold:C.creamSoft,'600','left');
+  const labels={ready:'开始两波遭遇',intermission:'准备好了 · 迎接下一波',result:'收好物资 · 结束遭遇',done:d.sample?'重开独立样例':'返回家园'};
+  if(labels[d.phase])uiButton(fortRect('start'),labels[d.phase]);
+  txt(`待入库 ${rewardText(d.cargo)}`,20,746,12,C.gold,'700','left');
+  if(['result','done'].includes(d.phase))txt(`驱离${d.repelled}/2波 · 落水${d.dropped} · 救回${d.recovered} · 损失${d.lost}`,20,622,12,C.cream,'600','left');
+  if(d.phase==='done'){
+    txt(`已入库：${rewardText(d.actual)}`,20,766,11,C.creamSoft,'600','left');
+    if(Object.values(d.overflow).some(n=>n>0))txt(`容量不足未入库：${rewardText(d.overflow)}`,20,665,11,C.gold,'600','left');
+  }
+  drawNavBar();
+}
+function startFortificationSample(){
+  if(globalThis.__fortificationSample!==true)return false;
+  resetGame();state.home.deck=[];for(let r=1;r<=6;r++)for(let c=1;c<=6;c++)homeDeckAdd(r,c);
+  state.materials={wood:80,plastic:50,iron:30};homePlace(1,1,'cabin');homePlace(4,1,'ballista');
+  const cabin=state.home.grid.find(e=>e?.type==='cabin');state.home.upper.push({type:'bed',uid:'fort_bed',r:1,c:1,floor:1,size:1,width:1,height:1,level:1,supportId:cabin.uid});
+  state.cats.push({id:'fort_c2',name:'灰爪',role:'engineer',level:1,mood:80,energy:90,hunger:10,job:null,state:'idle',manualRest:true});
+  state.cats.forEach(ensureCatData);assignCatToType(state.cats[0].id,'ballista');state.materials={wood:30,plastic:16,iron:12};state.supplies={food:5,water:5,fish:0};
+  state.tutorialDone=true;state.tutorialStep=4;state.segmentDone={cabin:true,partner:true,purifier:true,staffed:true};state.segmentPanel=null;
+  state.fortification=makeFortification({v:1,phase:'ready',cargo:{wood:2,plastic:1,iron:1},sample:true});state.screen='guard';state.paused=false;state.messageTimer=0;state.dirty=true;saveGame();return true;
+}
 function homeRigBusy() { return !!(state.hook&&(state.hook.extending||state.hook.retracting||state.hook.hold)); }
 function homeRigMount() {
   if(state.hook&&!state.hook.swinging&&state.hook.rigMount)return state.hook.rigMount;
@@ -2985,10 +3519,25 @@ function setAim(x, y) {
   state.aimY = y;
 }
 // 松手：够得到才出爪。超出钱长时只提示，不白白浪费一个往返
+function autoSwingMode(){return !defenseActive();}
+const HOOK_SWING_SPEED=.95;
+function updateHookSwing(dt){
+  const h=state.hook;
+  if(!h.swinging)return;
+  if(!autoSwingMode()){h.angle=state.aimAngle;return;}
+  if(state.screen!=='salvage'||state.hookLock>0)return;
+  // Rotate continuously; wrap the angle without reversing the hook.
+  if(!Number.isFinite(h.sweepAngle))h.sweepAngle=Math.PI;
+  h.sweepDir=-1;
+  h.sweepAngle-=HOOK_SWING_SPEED*dt;
+  if(h.sweepAngle<-Math.PI||h.sweepAngle>Math.PI)h.sweepAngle=((h.sweepAngle+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+  h.angle=h.sweepAngle;state.aimAngle=h.angle;
+}
 function releaseAim() {
   if (!state.aiming) return;
   state.aiming = false;
   if (state.paused || state.buildMode) return;
+  if(autoSwingMode()){state.aimAngle=state.hook.angle;throwHook();return;}
   const a = hookAnchor();
   if (Math.hypot(state.aimX - a.x, state.aimY - a.y) > MAX_LEN() + 20) {
     state.message = '超出绳长，靠近一点再打';
@@ -3080,6 +3629,13 @@ function getCards() {
 function canAfford(cost) {
   return !!cost && Object.keys(cost).every((k) => resCount(k) >= cost[k]);
 }
+function materialShortage(cost, compact = false) {
+  if (!cost) return '';
+  const names = { wood: '木板', plastic: '塑料', iron: '铁' };
+  const missing = Object.keys(cost).filter(k => resCount(k) < cost[k])
+    .map(k => `${compact ? resShort(k) : names[k] || resShort(k)}${cost[k] - resCount(k)}`);
+  return missing.length ? `还差${missing.join('、')}` : '';
+}
 function pay(cost) {
   for (const k of Object.keys(cost)) resPay(k, cost[k]);
 }
@@ -3117,10 +3673,18 @@ function tryCard(card) {
 }
 
 // ================= 更新 =================
-function update(dt) {
+function update(dt,playDt=dt) {
   dt = clamp(dt, 0, 0.05);
   // 结算面板打开时冻住模拟（但不清档、不重置）
   if (state.paused || state.logbookOpen || state.segmentPanel || state.kitPanel || navigation().travel?.event?.stage==='choice' || (defenseActive()&&state.defense.phase==='result')) return;
+  updateAppearance(clamp(playDt,0,1));
+  if(state.screen==='fishCodex'){state.messageTimer=Math.max(0,state.messageTimer-dt);state.saveTimer+=dt;if(state.dirty&&state.saveTimer>2){state.saveTimer=0;saveGame();}return;}
+  if(state.screen==='appearance'){
+    state.messageTimer=Math.max(0,state.messageTimer-dt);state.saveTimer+=dt;
+    if(state.dirty&&state.saveTimer>2){state.saveTimer=0;saveGame();}return;
+  }
+  if(state.screen==='guard'){state.time+=dt;state.messageTimer=Math.max(0,state.messageTimer-dt);updateFortification(dt);state.saveTimer+=dt;if(state.dirty&&state.saveTimer>2){state.saveTimer=0;saveGame();}return;}
+  if(fortBusy())return;
   checkSegmentTrigger();
   state.time += dt;
   state.shake = Math.max(0, state.shake - dt);
@@ -3158,7 +3722,7 @@ function update(dt) {
   updateShoal(dt);
   autoSalvage(dt);
   const h = state.hook;
-  if (h.swinging) h.angle = state.aimAngle;
+  updateHookSwing(dt);
 
   const prev = hookTip();
   if (h.extending) {
@@ -3399,13 +3963,20 @@ function grant(d) {
     state.messageTimer = 3; state.dirty = true; saveGame(); return;
   }
   if (d.fish) {
+    if(d.fishRecorded)return;
+    const fresh=recordFishCatch(d);
+    if(d.fishSpecies==='eel'){
+      addFloater('活电鳗 +1',C.gold,d.x,d.y-18);
+      if(!fresh){state.message='电鳗已保留，图鉴累计捕获次数已更新';state.messageTimer=2;}
+      saveGame();return;
+    }
     const room = Math.max(0, supplyCap() - (state.supplies.fish || 0));
     const got = Math.min(d.big ? 2 : 1, room);
     state.supplies.fish = (state.supplies.fish || 0) + got;
     addFloater(got > 0 ? `鱼 +${got}` : '鱼已满', got > 0 ? C.teal : C.creamSoft, d.x, d.y - 18);
-    state.message = got > 0 ? `抓到${d.big ? '大鱼' : '鱼'}：鱼 +${got}，厨房能做成鱼餐` : '鱼已满，先去厨房做鱼餐';
-    state.messageTimer = 2;
+    if(!fresh){state.message = got > 0 ? `抓到${d.big ? '大鱼' : '鱼'}：鱼 +${got}，厨房能做成鱼餐` : '鱼已满，先去厨房做鱼餐';state.messageTimer = 2;}
     state.dirty = true;
+    saveGame();
     return;
   }
   if (d.tangle) {
@@ -3768,7 +4339,7 @@ function drawDebrisItem(d) {
     case 'seed': drawSeedPouch(); break;
     case 'tangle': drawTangleNet(); break;
     case 'oil': drawOilBarrel(); break;
-    case 'fish': drawFish(d.big); break;
+    case 'fish': d.fishSpecies==='eel'?drawElectricEel(false):drawFish(d.big); break;
     case 'care': drawCareSack(d.forcedKind === 'water'); break;
   }
   ctx.restore();
@@ -4051,6 +4622,15 @@ function drawSupplyBarrel() {
   ctx.beginPath(); ctx.moveTo(-r + 7, -r + 10); ctx.lineTo(-r + 7, r - 10); ctx.stroke();
 }
 
+function drawElectricEel(silhouette=false){
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  const body=()=>{ctx.beginPath();ctx.moveTo(-27,8);ctx.bezierCurveTo(-8,17,-16,-10,1,-6);ctx.bezierCurveTo(14,-2,3,10,21,1);};
+  body();ctx.strokeStyle='#1C3335';ctx.lineWidth=12;ctx.stroke();body();ctx.strokeStyle=silhouette?'#73848B':'#639C89';ctx.lineWidth=8;ctx.stroke();
+  if(!silhouette){ctx.strokeStyle='#E4CF77';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-17,7);ctx.lineTo(-11,8);ctx.moveTo(-4,-5);ctx.lineTo(1,-1);ctx.stroke();
+    ctx.fillStyle='#FFF0B1';ctx.beginPath();ctx.arc(20,-1,2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#172E31';ctx.beginPath();ctx.arc(20.5,-1,1,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#E5DB8B';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(2,-18);ctx.lineTo(-2,-12);ctx.lineTo(4,-12);ctx.lineTo(0,-7);ctx.stroke();}
+  ctx.restore();
+}
 function drawFish(big) {
   const k = big ? 1.35 : 1;
   ctx.scale(k, k);
@@ -4794,7 +5374,7 @@ function drawHook() {
   const a = hookAnchor();
   const h = state.hook;
   const idle=h.swinging&&!h.extending&&!h.retracting;
-  const len=idle?15:h.length,angle=idle?Math.PI:h.angle;
+  const len=idle?(autoSwingMode()?32:15):h.length,angle=idle&&!autoSwingMode()?Math.PI:h.angle;
   const tip = { x: a.x + Math.sin(angle) * len, y: a.y - Math.cos(angle) * len };
 
   ctx.strokeStyle = C.ink; ctx.lineWidth = 5;
@@ -4994,7 +5574,7 @@ function drawClaw(x, y, angle, open) {
 // 拖动瞄准：从船心到手指的虚线 + 判定环
 // 用“环”而不是“点”作为准星：手指按在目标上时，环的两侧仍然看得见
 function drawAimOverlay() {
-  if (!state.aiming || state.buildMode) return;
+  if (!state.aiming || state.buildMode || autoSwingMode()) return;
   const a = hookAnchor();
   const dx = state.aimX - a.x, dy = state.aimY - a.y;
   const dist = Math.max(1, Math.hypot(dx, dy));
@@ -5100,7 +5680,7 @@ function drawTopHud() {
   roundRect(16, 58, Math.max(2, (W - 32) * bandProgress()), 5, 2.5); ctx.fill();
 
   // 改造路线（极简）
-  txt(state.tutorialDone?'升级在「船只」，设施在「家园」':'点海面瞄准，松手出钩',16,87,12,C.creamSoft,'600','left');
+  txt(autoSwingMode()?'自动摆钩 · 看准方向，点一下海面出钩':'护船操作 · 按住瞄准，松手出钩',16,87,12,C.creamSoft,'600','left');
 }
 
 function drawMatIcon(kind, x, y, r) {
@@ -5225,7 +5805,7 @@ function drawPanel() {
   if(!defenseActive()){
     for(const key of ['ship','home'])uiButton(salvageShortcutRect(key),key==='ship'?'\u8239\u53ea\u5347\u7ea7':'\u5bb6\u56ed\u5efa\u9020',true);
     const autoCat=state.cats.find(isHookCat);
-    txt(autoCat?`${autoCat.name}\u6b63\u5728\u81ea\u52a8\u6293\u53d6`:'\u624b\u52a8\u6293\u53d6 \u00b7 \u70b9\u6d77\u9762\u7784\u51c6\uff0c\u677e\u624b\u51fa\u94a9',W/2,688,12,C.creamSoft,'600');
+    uiButton(fishJournalEntryRect(),`钓鱼图鉴${fishAchievementReadyCount()?' · 成就可领':fishJournal().unread?' · 新发现 / 图纸':''}`,true);
   }
   drawNavBar();
 }
@@ -5234,6 +5814,7 @@ function salvageShortcutRect(key){return{x:key==='ship'?16:W/2+4,y:614,w:W/2-20,
 function drawNavBar() {
   const items = [['salvage', '打捞'], ['map', navigation().travel?.event?.stage==='choice'?'待决定':navigation().travel?'航行':navigation().receipt?'到港':'航线'], ['ship', '船只'], ['home', '家园'], ['cat', '伙伴']];
   if(homeLoopActive())items.push(['journey',`目标${state.homeLoop.step}/6`]);
+  if(state.fortification)items.push(['guard','布防']);
   const y = H - 62, h = 46;
   ctx.fillStyle = C.surface;
   roundRect(8, y, W - 16, h, 14); ctx.fill();
@@ -5266,9 +5847,11 @@ function drawShipScreen() {
   });
   if(state.messageTimer>0)txt(state.message.slice(0,30),20,465,12,C.gold,'600','left');
   uiButton(shipLogbookRect(),'航海日志 · 查看历次记录',true);
-  txt('界面皮肤',20,550,18,C.cream,'800','left');txt('只改变配色，随时切换',20,579,13,C.creamSoft,'600','left');
-  for(const id of Object.keys(UI_SKINS)){const b=skinRect(id);uiButton(b,`${state.skin===id?'✓ ':''}${UI_SKINS[id].name}`,state.skin!==id);}
-  txt('航线、燃料和出航准备在「航线」中查看',20,700,12,C.creamSoft,'600','left');drawNavBar();
+  txt('家园建筑外观',20,550,18,C.cream,'800','left');txt(`${buildingStyle().name} · 已玩${Math.floor(appearance().seconds/60)}分钟`,20,579,13,C.creamSoft,'600','left');
+  uiButton({x:20,y:612,w:W-40,h:48},'预览外观 · 查看时长解锁');
+  if(eelPower().assembled)uiButton({x:20,y:680,w:W-40,h:36},'电鳗发电机 · 管理供电',true);
+  else txt('航线、燃料和出航准备在「航线」中查看',20,700,12,C.creamSoft,'600','left');
+  uiButton({x:20,y:730,w:W-40,h:36},'护船布防 · 查看炮台与岗位',true);drawNavBar();
 }
 function drawCatHead(cx, cy, s, color) {
   ctx.save();
@@ -5343,7 +5926,7 @@ function drawCatScreen() {
   ctx.fillStyle = C.surface;
   roundRect(8, barY, W - 16, 190, 14); ctx.fill();
   txt(selCat ? `安排：${selCat.name}` : '点一只猫选中，再安排岗位', W / 2, barY + 14, 9, selCat ? C.gold : C.creamSoft, '700');
-  const actionLabels={hook:'自动抓取',purifier:'净水',kitchen:'厨房',net:'渔网',clinic:'医务',dock:'出船',rest:'休息',rename:'改名'};
+  const actionLabels={hook:'自动抓取',purifier:'净水',kitchen:'厨房',net:'渔网',clinic:'医务',dock:'出船',ballista:'炮台',rest:'休息',rename:'改名'};
   const keys=actions;
   const bw = (W - 32 - 12) / 3, bh = 44;
   keys.forEach((key, i) => {
@@ -5787,6 +6370,15 @@ function drawTutorial() {
     return;
   }
   if (step === 2) return; // 已出爪，等结果再说
+  if(autoSwingMode()){
+    const h=state.hook,dx=Math.sin(h.angle),dy=-Math.cos(h.angle);
+    const len=Math.min(MAX_LEN(),90),x=a.x+dx*len,y=a.y+dy*len;
+    ctx.save();ctx.strokeStyle='rgba(255,201,60,.72)';ctx.lineWidth=2;ctx.setLineDash([5,6]);
+    ctx.beginPath();ctx.moveTo(a.x+dx*43,a.y+dy*43);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    const cy=SEA_BOTTOM-76;uiBox(28,cy,W-56,52);
+    txt('抓钩自动摆动，看准方向点一下',W/2,cy+17,12,C.cream,'800');
+    txt('点击海面出钩；手指位置不改变方向',W/2,cy+37,10,C.creamSoft,'500');return;
+  }
 
   // 演示目标：优先选最近的漂流物，海面空时用船侧固定点
   let tgt = null, bd = 1e9;
@@ -6167,7 +6759,7 @@ function homeCabinGeometry(e, visual) {
   }
   const d = homeCabinDimensions(e,levels), roofZ = levels*26+1;
   const top = homePrismCorners({ r:e.r-0.12,c:e.c-0.12,width:d.w+0.24,height:d.h+0.24 },roofZ);
-  const pitch = 12 + levels*2.5;
+  const pitch = buildingStyle()===BUILDING_SKINS.workshop?0:buildingStyle()===BUILDING_SKINS.harbor?21+levels*2:12+levels*2.5;
   const mix = (a,b,t,lift=0) => ({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t-lift*scale});
   const ridgeA = mix(top[0],top[1],0.5,pitch), ridgeB = mix(top[3],top[2],0.5,pitch);
   const roof = { variant: ['canvas','metal','skylight'][levels-1], top, ridgeA, ridgeB,
@@ -6188,6 +6780,20 @@ function homeStroke(points, color, width) {
 }
 function drawShelterWall(face, floor, side, scale) {
   const panel=(t,w,bottom,top,color)=>homePolygon([face(t,top),face(t+w,top),face(t+w,bottom),face(t,bottom)],color,'#675D46');
+  const style=buildingStyle();
+  if(style===BUILDING_SKINS.workshop){
+    for(const t of [.08,.24,.4,.56,.72,.9]){
+      homeStroke([face(t,2),face(t,24)],'#B6CCC0',1.2*scale);
+      for(const z of [3,23]){const p=face(t,z);ctx.fillStyle='#DFC58C';ctx.beginPath();ctx.arc(p.x,p.y,.9*scale,0,Math.PI*2);ctx.fill();}
+    }
+    if(side===1){homeStroke([face(.9,23),face(.9,5),face(.7,5)],'#465B61',3.5*scale);panel(.04,.25,4,10,'#C69959');}
+    return;
+  }
+  if(style===BUILDING_SKINS.harbor){
+    panel(.02,.96,1,4,'#557F87');
+    for(const t of [0,.33,.66,1])homeStroke([face(t,2),face(t,24)],'#EEE0B0',1.5*scale);
+    return;
+  }
   // Stable patches follow the wall plane; no random paint changes between frames.
   panel(side?0.04:0.68,side?0.35:0.27,3,side?22:14,floor===1?'#7E9182':floor===2?'#9C8061':'#8EA69B');
   panel(side?0.43:0.02,0.19,floor===1?1:16,floor===1?8:24,'#AC7852');
@@ -6223,7 +6829,7 @@ function drawHomeCabin(e, editing) {
   const lerp=(a,b,t,z=0)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t-z*scale});
   ctx.save();ctx.globalAlpha*=visual.opacity;
   for(const layer of geometry.floors) {
-    const upper = layer.floor>1, colors = layer.floor===1 ? ['#C9AE7F','#A88B61','#826747'] : layer.floor===2 ? ['#D1BC8D','#A5AA8C','#72877D'] : ['#D8C79C','#BAAD8B','#8F927D'];
+    const upper = layer.floor>1, colors = buildingStyle()===BUILDING_SKINS.salvage?(layer.floor===1 ? ['#C9AE7F','#A88B61','#826747'] : layer.floor===2 ? ['#D1BC8D','#A5AA8C','#72877D'] : ['#D8C79C','#BAAD8B','#8F927D']):buildingStyle().walls;
     ctx.save(); if(visual.cutaway && layer.floor<visual.floor)ctx.globalAlpha*=0.24;
     homePolygon(layer.faces[0],colors[1]);homePolygon(layer.faces[1],colors[2]);homePolygon(layer.high,colors[0]);
     if(layer.height>5) {
@@ -6241,6 +6847,13 @@ function drawHomeCabin(e, editing) {
           homeStroke([face(t+w/2,bottom),face(t+w/2,top)],'#6F7967',0.8*scale);
           homeStroke([face(t-0.025,bottom-1),face(t+w+0.025,bottom-1)],'#E4C991',1.6*scale);
           if(!upper || (side===0&&t>0.7))homePolygon([face(t-0.08,top+1),face(t-0.015,top-1),face(t-0.015,bottom-1),face(t-0.08,bottom)],'#7E8F79','#736448');
+          if(buildingStyle()===BUILDING_SKINS.harbor){
+            homePolygon([face(t-.04,top+3),face(t+w+.04,top+3),face(t+w+.04,top),face(t-.04,top)],'#D67C4E');
+            homeStroke([face(t-.03,bottom),face(t-.03,top)],'#426F79',2*scale);
+          }else if(buildingStyle()===BUILDING_SKINS.workshop){
+            homeStroke([face(t-.02,top+2),face(t+w+.02,top+2)],'#D8BB79',2.5*scale);
+            for(const z of [bottom+3,bottom+6])homeStroke([face(t,z),face(t+w,z)],'#405B5E',1.4*scale);
+          }
         }
         if(side===0) {
           // Ground entrance and upper balcony doors have different sizes and glass.
@@ -6257,9 +6870,10 @@ function drawHomeCabin(e, editing) {
     ctx.restore();
   }
   if(visual.balconies)for(const balcony of geometry.balconies) {
-    homePolygon([balcony.high[3],balcony.high[2],balcony.low[2],balcony.low[3]],'#7C6241');
-    homePolygon([balcony.high[1],balcony.high[2],balcony.low[2],balcony.low[1]],'#6B533A');
-    homePolygon(balcony.high,'#BB9C68');
+    const industrial=buildingStyle()===BUILDING_SKINS.workshop;
+    homePolygon([balcony.high[3],balcony.high[2],balcony.low[2],balcony.low[3]],industrial?'#697E76':'#7C6241');
+    homePolygon([balcony.high[1],balcony.high[2],balcony.low[2],balcony.low[1]],industrial?'#4F6967':'#6B533A');
+    homePolygon(balcony.high,industrial?'#A2B4A5':'#BB9C68');
     // Open rails have no opaque panel in front of the upper windows.
     for(const [i,j] of [[0,3],[3,2],[2,1]]) {
       const a=balcony.high[i],b=balcony.high[j];
@@ -6269,22 +6883,41 @@ function drawHomeCabin(e, editing) {
     const a=balcony.high[3],b=balcony.high[2];
     // The former display balcony becomes a small working drying platform.
     homeStroke([lerp(a,b,0.05,10),lerp(a,b,0.95,10)],'#D6C493',0.9*scale);
-    for(const [t,color] of [[0.23,'#B37956'],[0.54,'#D0C39C']])homePolygon([lerp(a,b,t,9),lerp(a,b,t+0.16,9),lerp(a,b,t+0.14,2),lerp(a,b,t+0.01,3)],color,'#817359');
+    if(industrial){
+      for(const t of [.18,.45,.72])homePolygon([lerp(a,b,t,7),lerp(a,b,t+.12,7),lerp(a,b,t+.12,4),lerp(a,b,t,4)],'#D9B56E','#566F68');
+    }else for(const [t,color] of [[0.23,'#B37956'],[0.54,'#D0C39C']])homePolygon([lerp(a,b,t,9),lerp(a,b,t+0.16,9),lerp(a,b,t+0.14,2),lerp(a,b,t+0.01,3)],color,'#817359');
     homeStroke([balcony.low[3],{x:balcony.low[0].x,y:balcony.low[0].y+10*scale}],'#8B7047',2*scale);
   }
   if(visual.roof) {
-    const roof=geometry.roof, palette=visual.levels===1?['#8DA79A','#607F78','#C5AF82']:visual.levels===2?['#8E9B8D','#637D77','#BAAE87']:['#738F86','#4F6D6A','#BFB38C'];
+    const roof=geometry.roof, palette=buildingStyle()===BUILDING_SKINS.salvage?(visual.levels===1?['#8DA79A','#607F78','#C5AF82']:visual.levels===2?['#8E9B8D','#637D77','#BAAE87']:['#738F86','#4F6D6A','#BFB38C']):buildingStyle().roof;
     homePolygon(roof.gable,palette[2]);homePolygon(roof.planes[0],palette[0]);homePolygon(roof.planes[1],palette[1]);
     for(const plane of roof.planes)for(const t of [0.2,0.4,0.6,0.8])homeStroke([lerp(plane[0],plane[1],t),lerp(plane[3],plane[2],t)],'rgba(226,225,188,0.45)',0.9*scale);
     for(const [side,plane] of roof.planes.entries()) {
       const uv=(u,v)=>lerp(lerp(plane[0],plane[1],u),lerp(plane[3],plane[2],u),v);
+      if(buildingStyle()===BUILDING_SKINS.harbor){
+        for(const u of [.12,.36,.6,.84])homePolygon([uv(u,0),uv(u+.09,0),uv(u+.09,1),uv(u,1)],'#F3DCAC','#D0AF76');
+        for(const u of [0,.25,.5,.75,1])homeStroke([uv(u,1),{x:uv(u,1).x,y:uv(u,1).y+6*scale}],'#EAD2A0',2*scale);
+        continue;
+      }
+      if(buildingStyle()===BUILDING_SKINS.workshop){
+        for(const u of [.1,.25,.4,.55,.7,.85])homeStroke([uv(u,0),uv(u,1)],'#BAD0BE',1.5*scale);
+        continue;
+      }
       const patch=side===0?[uv(0.12,0.15),uv(0.52,0.18),uv(0.48,0.65),uv(0.15,0.61)]:[uv(0.66,0.12),uv(0.91,0.16),uv(0.88,0.48),uv(0.64,0.45)];
       homePolygon(patch,visual.levels===1?'#BAAE7E':side?'#AA7F58':'#AAB09A','#706E55');
       for(let i=0;i<patch.length;i++){const p=patch[i];ctx.fillStyle='#585B49';ctx.beginPath();ctx.arc(p.x,p.y,0.85*scale,0,Math.PI*2);ctx.fill();}
       if(visual.levels===1)for(const u of [0.06,0.94])homeStroke([uv(u,0.05),{x:uv(u,1).x,y:uv(u,1).y+5*scale}],'#D6BF8F',1.3*scale);
     }
     homeStroke([roof.ridgeA,roof.ridgeB],'#D5C395',2*scale);
-    if(visual.levels===3) {
+    if(buildingStyle()===BUILDING_SKINS.harbor){
+      const p=roof.ridgeA,q={x:p.x,y:p.y-16*scale};homeStroke([p,q],'#EBD29B',1.6*scale);
+      homePolygon([q,{x:q.x+16*scale,y:q.y+5*scale},{x:q.x,y:q.y+10*scale}],'#608F96');
+    }
+    if(buildingStyle()===BUILDING_SKINS.workshop){
+      for(const [i,j]of [[0,3],[3,2],[2,1]]){const a=roof.top[i],b=roof.top[j];for(const t of [0,.5,1])homeStroke([lerp(a,b,t),lerp(a,b,t,7)],'#D1BE8D',1.2*scale);homeStroke([lerp(a,b,0,7),lerp(a,b,1,7)],'#AEC5B9',1.5*scale);}
+      const p=roof.top[1];homeStroke([p,{x:p.x,y:p.y-13*scale},{x:p.x-7*scale,y:p.y-13*scale}],'#475F64',4*scale);
+    }
+    if(visual.levels===3&&buildingStyle()===BUILDING_SKINS.salvage) {
       const plane=roof.planes[1],a=lerp(plane[0],plane[1],0.28),b=lerp(plane[0],plane[1],0.62),c=lerp(plane[3],plane[2],0.62),d=lerp(plane[3],plane[2],0.28);
       const glass=[lerp(a,d,0.24),lerp(b,c,0.24),lerp(b,c,0.63),lerp(a,d,0.63)];
       homePolygon(glass,'#ACD7D3','#DFD3A7');homeStroke([lerp(glass[0],glass[1],0.5),lerp(glass[3],glass[2],0.5)],'#E4D9AE',1.2*scale);
@@ -6306,7 +6939,8 @@ function drawSpatialFurniture(e, floor) {
   ctx.strokeStyle = '#48382B'; ctx.lineWidth = 1.5;
   if (e.type === 'bed') {
     homePolygon([{ x: -15, y: -3 }, { x: 1, y: -11 }, { x: 17, y: -3 }, { x: 1, y: 6 }], '#E9DAB8');
-    ctx.fillStyle = '#568B8A'; ctx.fillRect(-8, -7, 16, 6); ctx.fillStyle = '#F2EBD8'; ctx.fillRect(-11, -4, 7, 4);
+    ctx.fillStyle = buildingStyle()===BUILDING_SKINS.harbor?'#D68A57':buildingStyle()===BUILDING_SKINS.workshop?'#668F91':'#568B8A'; ctx.fillRect(-8, -7, 16, 6); ctx.fillStyle = '#F2EBD8'; ctx.fillRect(-11, -4, 7, 4);
+    if(buildingStyle()===BUILDING_SKINS.workshop){homeStroke([{x:-13,y:0},{x:-13,y:8}], '#647E7E',3);homeStroke([{x:14,y:-2},{x:14,y:6}],'#647E7E',3);}
   } else if (e.type === 'plant') {
     ctx.fillStyle = '#AF7454'; ctx.fillRect(-6, -8, 12, 10); ctx.fillStyle = '#83A85A'; ctx.beginPath(); ctx.ellipse(-5, -14, 5, 10, -0.4, 0, Math.PI * 2); ctx.ellipse(4, -16, 5, 10, 0.4, 0, Math.PI * 2); ctx.fill();
   } else if (e.type === 'cabinet' || e.type === 'icebox') {
@@ -6374,7 +7008,52 @@ function drawHomeHelm(e){
   ctx.strokeStyle='#704C30';ctx.lineWidth=3;ctx.beginPath();ctx.arc(-12,-20,9,0,Math.PI*2);ctx.stroke();
   ctx.lineWidth=2;for(let i=0;i<6;i++){const a=i*Math.PI/3;ctx.beginPath();ctx.moveTo(-12,-20);ctx.lineTo(-12+Math.cos(a)*13,-20+Math.sin(a)*13);ctx.stroke();}
   ctx.fillStyle=C.gold;ctx.beginPath();ctx.arc(-12,-20,2.5,0,Math.PI*2);ctx.fill();
-  txt(navigation().travel?'主船航行中':'操舵 · 点此选航',0,20,9,C.gold,'700');ctx.restore();
+  if(state.screen!=='eelPower')txt(navigation().travel?'主船航行中':'操舵 · 点此选航',0,20,9,C.gold,'700');ctx.restore();
+}
+function drawPurifierModel(){
+  ctx.fillStyle = '#B8D4C9'; roundRect(-15, -30, 28, 31, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#518A96'; ctx.fillRect(-11, -16, 20, 13);
+  ctx.strokeStyle = '#D2B87D'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(13, -22); ctx.lineTo(24, -22); ctx.lineTo(24, -3); ctx.stroke();
+}
+function drawEelAquarium(){
+  ctx.fillStyle='#294C53';roundRect(-21,-55,42,30,5);ctx.fill();ctx.strokeStyle='#D3BD84';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#72B1B0';roundRect(-18,-52,36,24,3);ctx.fill();
+  ctx.save();ctx.translate(0,-39);ctx.scale(.5,.5);drawElectricEel(false);ctx.restore();
+  const active=eelPower().remaining>0&&eelReady();ctx.fillStyle=active?'#F5DF89':'#697E78';ctx.beginPath();ctx.arc(25,-41,3.5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#C5A66A';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(21,-35);ctx.lineTo(29,-35);ctx.lineTo(29,-17);ctx.stroke();
+}
+function drawEelWire(editing){
+  const source=eelSource(),target=eelTarget();if(!source||!target)return;
+  const s=homeViewScale(),a=homeIsoPos(source.r+.5,source.c+.5),b=homeIsoPos(target.r+.5,target.c+.5);
+  ctx.save();if(editing&&state.home.viewFloor>1)ctx.globalAlpha=.15;
+  ctx.strokeStyle=eelPower().remaining>0&&eelReady()?'#E0C46F':'#566F69';ctx.lineWidth=2*s;
+  ctx.beginPath();ctx.moveTo(a.x+12*s,a.y-15*s);ctx.bezierCurveTo(a.x+25*s,a.y+8*s,b.x+22*s,b.y+10*s,b.x+12*s,b.y-9*s);ctx.stroke();ctx.restore();
+}
+function drawBuildingTrim(e,editing){
+  if(buildingStyle()===BUILDING_SKINS.salvage||e.type==='cabin'||['deck','bed','table','plant','stairs'].includes(e.type))return;
+  const d=homeDimensions(e),s=homeViewScale(),garden=e.type==='garden';
+  const top=homePrismCorners(e,garden?5:15),lerp=(a,b,t,z=0)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t-z*s});
+  const view=editing?state.home.viewFloor||0:0;ctx.save();if(view>1)ctx.globalAlpha*=.16;
+  if(buildingStyle()===BUILDING_SKINS.harbor){
+    if(['purifier','kitchen','clinic','storage','net','garden'].includes(e.type)){
+      const lift=garden?22:44;
+      const a=lerp(top[3],top[2],-.08,lift),b=lerp(top[3],top[2],1.08,lift),c=lerp(top[0],top[1],1.08,lift+8),f=lerp(top[0],top[1],-.08,lift+8);
+      for(let i=0;i<6;i++)homePolygon([lerp(a,b,i/6),lerp(a,b,(i+1)/6),lerp(f,c,(i+1)/6),lerp(f,c,i/6)],i%2?'#F0D6A0':'#CC7C4E');
+      for(const [p,q]of [[top[3],a],[top[2],b]])homeStroke([p,q],'#DEC894',1.5*s);
+    }else{
+      const p=top[1],q={x:p.x,y:p.y-14*s};homeStroke([p,q],'#E5CD95',1.2*s);homePolygon([q,{x:q.x+9*s,y:q.y+3*s},{x:q.x,y:q.y+7*s}],'#D68655');
+    }
+  }else{
+    for(const i of [1,3])homeStroke([top[i],{x:top[i].x,y:top[i].y-7*s}],'#6C8D88',3*s);
+    if(garden){
+      const high=top.map(p=>({x:p.x,y:p.y-16*s}));homePolygon([high[3],high[2],top[2],top[3]],'rgba(166,211,201,.25)','#8FB9B0');
+      for(const t of [0,.5,1])homeStroke([lerp(top[3],top[2],t),lerp(high[3],high[2],t)],'#CCE0CC',1.2*s);
+      homeStroke([high[3],high[2],high[1],high[0],high[3]],'#C3D6BD',1.4*s);
+    }else{
+      const p=top[1];homeStroke([p,{x:p.x,y:p.y-17*s},{x:p.x-7*s,y:p.y-17*s}],'#455E61',3*s);
+      const q=lerp(top[3],top[2],.2);homeStroke([{x:q.x-4*s,y:q.y},{x:q.x+4*s,y:q.y}],'#D7AE62',3*s);
+    }
+  }
+  ctx.restore();
 }
 function drawSpatialHomeWorld(showExpansion) {
   const previousProjection=homeRenderProjection;
@@ -6388,12 +7067,13 @@ function drawSpatialHomeWorld(showExpansion) {
     if (!built && (!showExpansion || view > 1 || !homeDeckAdjacent(r, c))) continue;
     ctx.save(); if (view > 1) ctx.globalAlpha = 0.22;
     if (!built) ctx.globalAlpha = 0.20;
-    homePrism({ r, c, width: 1, height: 1 }, -4, 4, built ? ['#BA8C58', '#79603B', '#624C32'] : ['#B0CAC2', '#6A9995', '#6A9995']); ctx.restore();
+    homePrism({ r, c, width: 1, height: 1 }, -4, 4, built ? buildingStyle().deck : ['#B0CAC2', '#6A9995', '#6A9995']); ctx.restore();
   }
   const entries = state.home.grid.filter(e => e && HOME_DEFS[e.type] && e.type !== 'deck').sort((a, b) => {
     const da = homeDimensions(a), db = homeDimensions(b);
     return a.r + a.c + da.w + da.h - b.r - b.c - db.w - db.h;
   });
+  drawEelWire(showExpansion);
   for (const e of entries) {
     const d = homeDimensions(e), p = homeIsoPos(e.r + (d.h - 1) / 2, e.c + (d.w - 1) / 2);
     ctx.save();
@@ -6407,22 +7087,27 @@ function drawSpatialHomeWorld(showExpansion) {
     } else if (['bed', 'table', 'plant'].includes(e.type)) drawSpatialFurniture(e, 1);
     else {
       const exterior = ['garden', 'dock', 'net', 'fishcage', 'fence'].includes(e.type);
-      homePrism(e, 0, exterior ? 4 : 13, [e.type === 'garden' ? '#665138' : '#C8AB79', '#9C7A4F', '#775B3B']);
+      homePrism(e, 0, exterior ? 4 : 13, buildingStyle()===BUILDING_SKINS.salvage?[e.type === 'garden' ? '#665138' : '#C8AB79', '#9C7A4F', '#775B3B']:buildingStyle().walls);
       ctx.translate(p.x, p.y - (exterior ? 4 : 13) * scale); ctx.scale(scale, scale);
       ctx.strokeStyle = '#4B4135'; ctx.lineWidth = 1.7;
-      if(e.type==='power'){
+      if(e.type==='ballista'){
+        const side=fortSide(e)==='left'?-1:1;ctx.scale(side,1);ctx.fillStyle='#607C77';roundRect(-12,-17,24,16,3);ctx.fill();ctx.stroke();
+        ctx.strokeStyle=C.ink;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-8,-19);ctx.lineTo(25,-19);ctx.moveTo(15,-33);ctx.quadraticCurveTo(30,-19,15,-5);ctx.stroke();
+        ctx.strokeStyle=C.woodLight;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-8,-19);ctx.lineTo(25,-19);ctx.moveTo(15,-33);ctx.quadraticCurveTo(30,-19,15,-5);ctx.stroke();
+        ctx.fillStyle=C.gold;ctx.beginPath();ctx.moveTo(34,-19);ctx.lineTo(27,-24);ctx.lineTo(27,-14);ctx.closePath();ctx.fill();
+      }else if(e.type==='power'){
         ctx.fillStyle='#69837D';roundRect(-17,-22,32,22,4);ctx.fill();ctx.stroke();
         ctx.fillStyle='#C99856';ctx.fillRect(-12,-18,7,14);ctx.fillRect(-2,-18,7,14);
         ctx.strokeStyle='#414F4C';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(12,-12);ctx.lineTo(22,-12);ctx.lineTo(22,-33);ctx.lineTo(16,-33);ctx.stroke();
         ctx.fillStyle=C.gold;ctx.beginPath();ctx.arc(-21,-5,5,0,Math.PI*2);ctx.fill();
+        if(eelSource()?.uid===e.uid)drawEelAquarium();
       }else if (e.type === 'garden') {
         for (let r = 0; r < d.h; r++) for (let c = 0; c < d.w; c++) {
           const x = (c - r + (d.h - d.w) / 2) * 12, y = (r + c - (d.h + d.w - 2) / 2) * 6;
           ctx.fillStyle = (r + c) % 2 ? '#93AD5C' : '#5F944F'; ctx.beginPath(); ctx.ellipse(x - 3, y - 5, 4, 9, -0.45, 0, Math.PI * 2); ctx.ellipse(x + 3, y - 5, 4, 9, 0.45, 0, Math.PI * 2); ctx.fill();
         }
       } else if (e.type === 'purifier') {
-        ctx.fillStyle = '#B8D4C9'; roundRect(-15, -30, 28, 31, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#518A96'; ctx.fillRect(-11, -16, 20, 13);
-        ctx.strokeStyle = '#D2B87D'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(13, -22); ctx.lineTo(24, -22); ctx.lineTo(24, -3); ctx.stroke();
+        drawPurifierModel();
       } else if (e.type === 'kitchen' || e.type === 'clinic') {
         ctx.fillStyle = '#D0C2A2'; ctx.fillRect(-20, -12, 40, 14); ctx.strokeRect(-20, -12, 40, 14);
         if (e.type === 'kitchen') { ctx.fillStyle = '#3A5155'; roundRect(-12, -28, 25, 16, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#D8C18F'; ctx.fillRect(-15, -30, 31, 4); }
@@ -6439,6 +7124,10 @@ function drawSpatialHomeWorld(showExpansion) {
     ctx.restore();
     if(showExpansion&&view<=1&&homeStaffingType(e)&&!catsAtFacility(`${e.r}_${e.c}`).length){
       txt(e.type==='dock'?'可出船':'缺人',p.x,p.y+16*scale,10,C.gold,'800');
+    }
+    drawBuildingTrim(e,showExpansion);
+    if(eelTarget()?.uid===e.uid&&eelSource()){
+      ctx.save();if(view>1)ctx.globalAlpha=.16;ctx.fillStyle=eelBoost(e)>1?'#F5DF89':'#667F78';ctx.beginPath();ctx.arc(p.x+18*scale,p.y-19*scale,3*scale,0,Math.PI*2);ctx.fill();ctx.restore();
     }
   }
   if(!homeCount('hook')){ctx.save();if(view>1)ctx.globalAlpha=0.15;drawHomeRig(homeRigMount());ctx.restore();}
@@ -6493,7 +7182,7 @@ function drawSpatialHomeScreen() {
   ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
   ctx.save();ctx.beginPath();ctx.rect(0,246,W,H*0.64-246);ctx.clip();drawHomeWorld(true);ctx.restore();
   ctx.fillStyle = C.surface; ctx.fillRect(0, 0, W, 78);
-  txt('海上家园', 14, 22, 20, C.cream, '800', 'left'); txt('v0.64', W - 14, 22, 10, C.gold, '700', 'right');
+  txt('海上家园', 14, 22, 20, C.cream, '800', 'left'); txt('v0.73', W - 14, 22, 10, C.gold, '700', 'right');
   txt(`木${state.materials.wood}  塑${state.materials.plastic}  铁${state.materials.iron} · 居民${state.cats.length}/${catCap()}`, 14, 45, 12, C.cream, '600', 'left');
   const capacity=homeCapacityReport();
   txt(`床${capacity.beds}＋船长吊床1${capacity.legacy?`＋旧床位${capacity.legacy}`:''} · 新居民需室内床`, 14, 65, 11, C.gold, '600', 'left');
@@ -6533,8 +7222,9 @@ function drawSpatialHomeScreen() {
     txt(key==='stairs'?'舱内1格 · 连接楼层':`${def.size}×${def.size} · ${homeIndoorType(key)?'室内/甲板':'甲板'}`,x+cw/2,py+104,10,C.gold,'600');
     const cost = buildCost(def), costText = Object.keys(cost).map(k => `${resShort(k)}${cost[k]}`).join(' ');
     txt(costText||'免费安置',x+cw/2,py+121,10,C.creamSoft,'600');
-    let hint=techLocked(key)?key==='power'?'操舵台＋建造分18':`建造分${TECH_REQ[key]}解锁`:homeGrowthHint(key);
-    if(hint.length>17)hint=hint.slice(0,16)+'…';txt(hint,x+cw/2,py+137,10,C.creamSoft,'600');
+    const shortage=materialShortage(cost,true);
+    let hint=techLocked(key)?key==='power'?'操舵台＋建造分18':`建造分${TECH_REQ[key]}解锁`:shortage||homeGrowthHint(key);
+    if(hint.length>17)hint=hint.slice(0,16)+'…';txt(hint,x+cw/2,py+137,10,!techLocked(key)&&shortage?'#F2A995':C.creamSoft,'600');
   });
   const preview = state.home.preview;
   if (preview) {
@@ -6546,11 +7236,12 @@ function drawSpatialHomeScreen() {
     const moving = state.home.moveUid && homeFindUid(state.home.moveUid);
     txt(moving?`${HOME_DEFS[moving.type].name} · 从${homeFloorName(moving.floor||1)}搬至${homeFloorName(currentFloor)}`:HOME_DEFS[state.home.selected]?.desc||'本类在甲板摆放，可点上方空卡返回',14,py+154,11,C.creamSoft,'600','left');
   }
-  const reason=preview&&homePreviewReason(preview),message=reason||(preview?.action==='upgrade'?homeUpgradeBenefit(homeFindUid(preview.uid)):state.messageTimer>0?state.message:state.home.selected?homeGrowthHint(state.home.selected):homeGoal());
-  txt(message.length>34?message.slice(0,33)+'…':message,14,py+171,10,reason?'#F2A995':C.cream,'600','left');
+  const reason=preview&&homePreviewReason(preview),shortage=preview&&materialShortage(homePreviewCost(preview));
+  const message=reason||shortage||(preview?.action==='upgrade'?homeUpgradeBenefit(homeFindUid(preview.uid)):preview&&homePreviewCost(preview)?'材料齐全 · 确认后扣除':state.messageTimer>0?state.message:state.home.selected?homeGrowthHint(state.home.selected):homeGoal());
+  txt(message.length>34?message.slice(0,33)+'…':message,14,py+171,10,reason||shortage?'#F2A995':C.cream,'600','left');
   const expanding=preview&&preview.action==='expand',addingFloor=preview&&preview.action==='upgrade'&&preview.type==='cabin',addingEntry=addingFloor&&homeFindUid(preview.uid);
   const confirmText=expanding?`确认${preview.floor}层扩为${preview.w}×${preview.h}`:addingFloor?`确认加建${addingEntry.level+1}层（含楼梯）`:preview?preview.action==='move'?'确认搬迁':preview.action==='place'?`确认放置${HOME_DEFS[preview.type].name}`:`确认${homeUpgradeVerb(homeFindUid(preview.uid))}`:'先选项目，再点位置';
-  ctx.fillStyle = preview && !reason ? C.coral : C.surfaceRaised; roundRect(12, H - 127, W - 126, 44, 7); ctx.fill(); txt(confirmText, (W - 126) / 2 + 12, H - 105, 12, C.cream, '700');
+  ctx.fillStyle = preview && !reason && !shortage ? C.coral : C.surfaceRaised; roundRect(12, H - 127, W - 126, 44, 7); ctx.fill(); txt(shortage&&!reason?'材料不足 · 补齐后建造':confirmText, (W - 126) / 2 + 12, H - 105, 12, C.cream, '700');
   ctx.fillStyle = C.surfaceRaised; roundRect(W - 104, H - 127, 92, 44, 7); ctx.fill(); txt(expanding?'取消扩宽':addingFloor?'取消加建':'旋转占地', W - 58, H - 105, 12, C.cream, '700');
   drawNavBar();
 }
@@ -6669,10 +7360,14 @@ function drawBuildScreen() {
 
 // ================= 渲染 =================
 function render() {
+  if(state.screen==='eelPower'){drawEelPowerScreen();drawPauseOverlay();return;}
+  if(state.screen==='fishCodex'){drawFishCodex();drawPauseOverlay();return;}
   if(state.logbookOpen){drawLogbook();return;}
   if(state.kitPanel){drawKitPanel();return;}
+  if(state.screen==='guard'){drawFortification();drawPauseOverlay();return;}
   if(homeLoopActive()&&state.screen==='journey'){drawHomeLoopScreen();drawPauseOverlay();return;}
   if (state.screen === 'home') { drawHomeScreen(); drawPauseOverlay(); drawSegmentPanel(); return; }
+  if (state.screen === 'appearance') { drawAppearanceScreen(); drawPauseOverlay(); return; }
   if (state.screen === 'ship') { drawShipScreen(); drawPauseOverlay(); drawSegmentPanel(); return; }
   if (state.screen === 'cat') { drawCatScreen(); drawPauseOverlay(); drawSegmentPanel(); return; }
   if (state.screen === 'map') { drawMapScreen(); drawPauseOverlay(); drawSegmentPanel(); return; }
@@ -6696,7 +7391,7 @@ function render() {
   drawTopHud();
   // 目标提示（漫画旁白框）
   if (state.messageTimer <= 0) {
-    const goal = defenseAdvanced()?'进阶：识别红圈真冲撞；船体不会受损':defenseActive()?'护船演练：钩中鱼身打断，原仓库安全':homeGoal();
+    const goal = globalThis.__fishDiscoverySample===true?(fishJournal().eelSeen?'电鳗已发现，点「钓鱼图鉴」查看图纸':'电鳗发现样例：本次必出，抓住并回收上船'):defenseAdvanced()?'进阶：识别红圈真冲撞；船体不会受损':defenseActive()?'护船演练：钩中鱼身打断，原仓库安全':homeGoal();
     ctx.font = '800 10px "Arial Black", "PingFang SC", sans-serif';
     const gw = ctx.measureText(goal).width + 26;
     const gx = W / 2 - gw / 2, gy = TOP_H + 10;
@@ -6781,13 +7476,16 @@ function onTouch(x, y) {
       const bw = (pw - 56) / 2;
       if (y > py + 148 && y < py + 188) {
         if (x > px + 20 && x < px + 20 + bw) { state.confirmReset = false; return; }
-        if (x > px + 36 + bw && x < px + 36 + bw * 2) { state.confirmReset = false; if(globalThis.__defenseSample===true)startDefenseSample();else if(globalThis.__homeLoopSample===true)startHomeLoopSample();else if(globalThis.__salvageKitSample===true)startSalvageKitSample();else resetGame(); state.paused = false; return; }
+        if (x > px + 36 + bw && x < px + 36 + bw * 2) { state.confirmReset = false; if(globalThis.__achievementBuildSample===true){startAchievementBuildSample();}else if(globalThis.__fishAchievementSample===true){startFishAchievementSample();}else if(globalThis.__eelPowerSample===true){startEelPowerSample();}else if(globalThis.__fishDiscoverySample===true){startFishDiscoverySample();prepareSampleEel();}else if(globalThis.__fortificationSample===true)startFortificationSample();else if(globalThis.__defenseSample===true)startDefenseSample();else if(globalThis.__homeLoopSample===true)startHomeLoopSample();else if(globalThis.__salvageKitSample===true)startSalvageKitSample();else resetGame(); state.paused = false; return; }
       }
     }
     return;
   }
   if(state.screen==='ship'||state.screen==='map'&&!navigation().preparing){const b=state.screen==='ship'?shipLogbookRect():logbookButtonRect();if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){openLogbook();return;}}
   if(defenseTouch(x,y))return;
+  if(state.screen==='fishCodex'){fishCodexTouch(x,y);return;}
+  if(state.screen==='eelPower'){eelPowerTouch(x,y);return;}
+  if(state.screen==='salvage'&&!defenseActive()){const b=fishJournalEntryRect();if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){openFishCodex();return;}}
   if(state.screen==='salvage'){const b=kitButtonRect();if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){openKit();return;}}
 
   if (state.screen === 'salvage' && Math.hypot(x - PAUSE_BTN.x, y - PAUSE_BTN.y) < PAUSE_BTN.r + 8) {
@@ -6797,9 +7495,11 @@ function onTouch(x, y) {
   }
 
   // 全局底部导航
+  if(state.screen==='appearance'){appearanceTouch(x,y);return;}
   if (y >= H - 62) {
     const items = ['salvage', 'map', 'ship', 'home', 'cat'];
     if(homeLoopActive())items.push('journey');
+    if(state.fortification)items.push('guard');
     const idx = Math.floor((x - 8) / ((W - 16) / items.length));
     if (idx >= 0 && idx < items.length) {
       const key = items[idx];
@@ -6812,11 +7512,14 @@ function onTouch(x, y) {
   }
 
   // 家园界面
+  if(state.screen==='guard'){fortTouch(x,y);return;}
   if(homeLoopActive()&&state.screen==='journey'){if(y>=H-143&&y<=H-94)homeLoopGo();return;}
   if (state.screen === 'home') { handleHomeTouch(x, y); return; }
 
   if (state.screen === 'ship') {
-    for(const id of Object.keys(UI_SKINS)){const b=skinRect(id);if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){setSkin(id);return;}}
+    if(eelPower().assembled&&x>=20&&x<=W-20&&y>=680&&y<=716){openEelPower();return;}
+    if(x>=20&&x<=W-20&&y>=730&&y<=766){fortOpen();return;}
+    if(x>=20&&x<=W-20&&y>=612&&y<=660){openAppearance();return;}
     for(const [i,card]of getCards().entries()){const b=shipCardRect(i);if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){tryCard(card);return;}}
     return;
   }
@@ -6849,7 +7552,7 @@ function onTouch(x, y) {
       const key=catActionKeys().find(k=>{const b=catActionRect(k);return x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h;});
       if (!key) return;
       if (key === 'hook') assignCatToType(selCat.id, 'hook');
-      else if (key === 'purifier' || key === 'kitchen' || key === 'net' || key === 'clinic') assignCatToType(selCat.id, key);
+      else if (key === 'purifier' || key === 'kitchen' || key === 'net' || key === 'clinic' || key === 'ballista') assignCatToType(selCat.id, key);
       else if (key === 'dock') sendCatExpedition(selCat);
       else if (key === 'rest') assignCat(selCat.id, null);
       else if (key === 'rename') renameCat(selCat.id);
@@ -6921,11 +7624,13 @@ function onTouch(x, y) {
     return;
   }
   if (y > TOP_H && y < SEA_BOTTOM) {
+    if(fortBusy()){homeNotice('护船遭遇进行中，请回布防页面处理');return;}
     if(defenseActive()&&['ending','result'].includes(state.defense.phase))return;
+    if(navigation().travel){homeNotice('航行中暂不能打捞，抵达后再出钩');return;}
     state.aiming = true;
     state.lastInputAt = state.time;
     if (state.tutorialStep === 0) { state.tutorialStep = 1; state.tutorialStepAt = state.time; }
-    setAim(x, y);
+    if(!autoSwingMode())setAim(x, y);
   }
 }
 
@@ -6938,7 +7643,7 @@ if (typeof wx !== 'undefined' && wx.onTouchStart) {
 }
 if (typeof wx !== 'undefined' && wx.onTouchMove) {
   wx.onTouchMove((e) => {
-    if (!state.aiming || state.paused || state.buildMode) return;
+    if (!state.aiming || state.paused || state.buildMode || autoSwingMode()) return;
     const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
     if (!t) return;
     setAim(t.clientX != null ? t.clientX : t.x, t.clientY != null ? t.clientY : t.y);
@@ -6967,7 +7672,7 @@ function homeLoopEvent(key,n=1) {
 function homeLoopFacility(type) {
   const f=homeFacilities().find(f=>f.type===type);
   if(!f)return {text:'未建造',workers:0,seconds:0};
-  const e=facilityEntry(f.key),workers=catsAtFacility(f.key).filter(c=>!isExpeditionCat(c)),speed=workers.reduce((n,c)=>n+catWorkSpeed(c,type),0);
+  const e=facilityEntry(f.key),workers=catsAtFacility(f.key).filter(c=>!isExpeditionCat(c)),speed=workers.reduce((n,c)=>n+catWorkSpeed(c,type),0)*eelBoost(e);
   const capped=state.supplies[type==='purifier'?'water':'food']>=supplyCap();
   const seconds=speed?Math.ceil(Math.max(0,(PRODUCTION_TIME[type]||60)-(e.progress||0))/speed):0;
   return {workers:workers.length,seconds,text:!workers.length?'缺人：到猫页安排':capped?'仓满：消耗补给后继续':`生产中 · ${seconds}秒后产出`};
@@ -7084,6 +7789,7 @@ if (!loadGame()) { initializeSpatialHome(false);ensureInitialRig(false); }
 if(globalThis.__defenseSample===true&&!state.defense)startDefenseSample();
 if(globalThis.__salvageKitSample===true&&!state.kitSampleReady)startSalvageKitSample();
 if(globalThis.__homeLoopSample===true){if(!state.homeLoop)startHomeLoopSample();else state.screen='journey';}
+if(globalThis.__fortificationSample===true){if(!state.fortification)startFortificationSample();else state.screen='guard';}
 if(navigation().travel||navigation().receipt)state.screen='map';
 // 调试参数（仅本地测试）：?build=1 预览满建状态
 try {
@@ -7106,9 +7812,9 @@ const frame = (() => {
   let last = Date.now();
   return function loop() {
     const now = Date.now();
-    const dt = Math.min((now - last) / 1000, 0.05);
+    const elapsed = Math.max(0,(now - last) / 1000), dt = Math.min(elapsed, 0.05);
     last = now;
-    update(dt);
+    update(dt,elapsed);
     render();
     raf(loop);
   };
