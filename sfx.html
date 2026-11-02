@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>未来水世界 · 音效试听</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#0B2034;color:#EDE7DA;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+body{padding:18px 16px 40px;max-width:560px;margin:0 auto}
+h1{font-size:22px;margin:6px 0 4px;font-weight:800}
+.sub{font-size:12px;color:#9FB3BE;margin-bottom:18px;line-height:1.6}
+.card{background:#12303D;border:1px solid rgba(237,231,218,.12);border-radius:12px;
+  padding:14px;margin-bottom:14px}
+.card h2{font-size:14px;margin:0 0 10px;font-weight:700;color:#C79A4A}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+button{font-family:inherit;font-size:13px;font-weight:700;color:#EDE7DA;
+  background:#1B4A5A;border:1px solid rgba(237,231,218,.16);border-radius:9px;
+  padding:13px 8px;cursor:pointer;transition:background .12s,transform .08s;
+  display:flex;flex-direction:column;align-items:center;gap:3px}
+button:active{transform:scale(.97);background:#22677C}
+button small{font-size:10px;font-weight:500;color:#8FA9B6}
+button.hot{background:#8A5A2E;border-color:rgba(199,154,74,.5)}
+button.hot:active{background:#A9743F}
+.row{display:flex;gap:8px;margin-top:10px}
+.row button{flex:1}
+input[type=range]{width:100%;-webkit-appearance:none;height:26px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:6px;background:#1B4A5A;border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;
+  border-radius:50%;background:#C79A4A;margin-top:-9px;border:2px solid #0B2034}
+input[type=range]::-moz-range-track{height:6px;background:#1B4A5A;border-radius:3px}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
+  background:#C79A4A;border:2px solid #0B2034}
+.zoneName{font-size:15px;font-weight:800;margin:2px 0 6px}
+.zoneInfo{font-size:12px;color:#9FB3BE;line-height:1.7;min-height:42px}
+.zoneInfo b{color:#C79A4A}
+.tip{font-size:11px;color:#7B93A0;margin-top:10px;line-height:1.6}
+.big{grid-column:span 2}
+</style>
+</head>
+<body>
+<h1>音效试听</h1>
+<div class="sub">全部是实时合成，没有音频文件。点按钮听，手机请先开声音、别静音。</div>
+
+<div class="card">
+  <h2>常用音效</h2>
+  <div class="grid">
+    <button onclick="play('tap')">点按<small>tap · 520Hz</small></button>
+    <button onclick="play('throw')">抛钩<small>throw · 320→190</small></button>
+    <button onclick="play('catch')">抓住<small>catch · 420→900</small></button>
+    <button onclick="play('open')">开箱<small>open · 880/1320</small></button>
+    <button onclick="play('build')">建造<small>build · 160→92</small></button>
+    <button onclick="play('produce')">产出<small>produce · 1040/1560</small></button>
+    <button onclick="play('claim')">领奖<small>claim · 三音上行</small></button>
+    <button onclick="play('discover')">发现<small>discover · 四音上行</small></button>
+    <button onclick="play('milestone')">里程碑<small>milestone · 四音</small></button>
+    <button onclick="play('fail')">失败<small>fail · 230→120</small></button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>水压（新增）</h2>
+  <div class="grid">
+    <button class="hot big" onclick="play('pressure')">潜入更深一层 · 闷响<small>pressure · 98→52 + 64→41</small></button>
+  </div>
+  <div class="zoneName" id="zoneName">入口货舱 · 还能待 38 秒</div>
+  <input type="range" min="0" max="3" step="1" value="0" id="depth" oninput="setDepth(this.value)">
+  <div class="zoneInfo" id="zoneInfo"></div>
+  <div class="tip">拖动滑块模拟潜入 1-4 层：越深，低鸣越重、音调越低。<br>
+  这是游戏里潜水时的持续背景音，进入新一层时会响上面的「闷响」。</div>
+</div>
+
+<div class="card">
+  <h2>音量</h2>
+  <input type="range" min="0" max="100" step="1" value="55" id="vol" oninput="setVol(this.value)">
+  <div class="tip" id="volTxt">55%</div>
+</div>
+
+<script>
+(function(){
+  var ac=null, master=null, volume=0.55;
+  var droneOsc=null, droneGain=null, droneAt=-1, droneOn=false;
+
+  function ensure(){
+    if(ac) return ac;
+    try{
+      if(typeof wx!=='undefined'&&wx.createWebAudioContext) ac=wx.createWebAudioContext();
+      else if(typeof AudioContext!=='undefined') ac=new AudioContext();
+      else if(typeof webkitAudioContext!=='undefined') ac=new webkitAudioContext();
+    }catch(e){ac=null}
+    if(!ac) return null;
+    try{
+      master=ac.createGain(); master.gain.value=volume; master.connect(ac.destination);
+    }catch(e){master=null;ac=null}
+    return ac;
+  }
+  function resume(){
+    var c=ensure();
+    if(c&&c.state==='suspended'&&c.resume){ try{c.resume()}catch(e){} }
+  }
+  function tone(opt){
+    var c=ensure(); if(!c||!master) return;
+    var freq=opt.freq||440, dur=opt.dur||0.12, delay=opt.delay||0;
+    var type=opt.type||'sine', gain=opt.gain==null?0.2:opt.gain;
+    try{
+      var t0=c.currentTime+delay;
+      var osc=c.createOscillator(), g=c.createGain();
+      osc.type=type;
+      osc.frequency.setValueAtTime(freq,t0);
+      if(opt.to) osc.frequency.exponentialRampToValueAtTime(Math.max(30,opt.to),t0+dur);
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.linearRampToValueAtTime(gain,t0+0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+      osc.connect(g); g.connect(master);
+      osc.start(t0); osc.stop(t0+dur+0.02);
+    }catch(e){}
+  }
+
+  var bank={
+    tap:function(){ tone({freq:520,dur:0.05,type:'triangle',gain:0.10}) },
+    throw:function(){ tone({freq:320,to:190,dur:0.13,type:'sawtooth',gain:0.08}) },
+    catch:function(){ tone({freq:420,to:640,dur:0.11,type:'triangle',gain:0.13}); tone({freq:640,to:900,dur:0.09,type:'sine',gain:0.09,delay:0.07}) },
+    open:function(){ tone({freq:880,dur:0.06,type:'square',gain:0.07}); tone({freq:1320,dur:0.09,type:'square',gain:0.05,delay:0.06}) },
+    build:function(){ tone({freq:160,to:92,dur:0.17,type:'sine',gain:0.20}) },
+    produce:function(){ tone({freq:1040,dur:0.07,type:'sine',gain:0.09}); tone({freq:1560,dur:0.09,type:'sine',gain:0.06,delay:0.05}) },
+    claim:function(){ [523,659,784].forEach(function(f,i){ tone({freq:f,dur:0.12,type:'triangle',gain:0.09,delay:i*0.07}) }) },
+    discover:function(){ [660,880,1100,1320].forEach(function(f,i){ tone({freq:f,dur:0.15,type:'sine',gain:0.08,delay:i*0.085}) }) },
+    milestone:function(){ [392,523,659,784].forEach(function(f,i){ tone({freq:f,dur:0.16,type:'triangle',gain:0.10,delay:i*0.075}) }) },
+    fail:function(){ tone({freq:230,to:120,dur:0.2,type:'sawtooth',gain:0.10}) },
+    pressure:function(){ tone({freq:98,to:52,dur:0.55,type:'sine',gain:0.15}); tone({freq:64,to:41,dur:0.75,type:'triangle',gain:0.09,delay:0.03}) }
+  };
+
+  function drone(level){
+    var c=ensure(); if(!c||!master) return;
+    var target=Math.max(0,Math.min(1,level));
+    if(target<=0.001){
+      if(droneGain&&droneAt>0){ droneAt=0;
+        try{ droneGain.gain.setTargetAtTime(0.0001,c.currentTime,0.35) }catch(e){} }
+      return;
+    }
+    if(!droneOsc){
+      try{
+        droneOsc=c.createOscillator(); droneGain=c.createGain();
+        droneOsc.type='sine'; droneOsc.frequency.value=54;
+        droneGain.gain.value=0.0001;
+        droneOsc.connect(droneGain); droneGain.connect(master);
+        droneOsc.start();
+      }catch(e){ droneOsc=null; return }
+    }
+    if(Math.abs(target-droneAt)<0.05) return;
+    droneAt=target;
+    try{
+      droneGain.gain.setTargetAtTime(0.012+target*0.072,c.currentTime,0.45);
+      droneOsc.frequency.setTargetAtTime(58-target*16,c.currentTime,0.7);
+    }catch(e){}
+  }
+
+  var ZONES=[
+    {name:'入口货舱',rate:1.0},{name:'生活舱',rate:1.6},
+    {name:'机舱',rate:2.4},{name:'密闭舱',rate:3.2}
+  ];
+  var OXY=38;
+
+  window.play=function(name){
+    resume();
+    if(bank[name]) bank[name]();
+  };
+
+  window.setDepth=function(v){
+    var i=parseInt(v,10)||0, z=ZONES[i];
+    var real=Math.ceil(OXY/z.rate);
+    document.getElementById('zoneName').textContent=z.name+' · 还能待 '+real+' 秒';
+    var rateTxt = z.rate===1 ? '耗气正常' : '这层耗气是入口的 '+z.rate.toFixed(1)+' 倍';
+    document.getElementById('zoneInfo').innerHTML=
+      '供气 '+OXY+'秒 · '+z.name+' · 还能'+real+'秒<br><b>'+rateTxt+'</b>'+
+      (i>0?'<br>进入这一层时会响一次「闷响」':'');
+    // 深度 1-4 映射到 drone 强度
+    droneOn = i>0;
+    resume();
+    drone(i>0 ? (i/3) : 0);
+    if(i>0) play('pressure');
+  };
+
+  window.setVol=function(v){
+    volume=Math.max(0,Math.min(1,v/100));
+    document.getElementById('volTxt').textContent=v+'%';
+    if(master){ try{ master.gain.value=volume }catch(e){} }
+  };
+
+  // 首次点任意按钮时解锁音频
+  document.addEventListener('touchstart',function once(){ resume(); document.removeEventListener('touchstart',once) },{passive:true});
+  document.addEventListener('click',function once(){ resume(); document.removeEventListener('click',once) });
+
+  setDepth(0);
+})();
+</script>
+</body>
+</html>
