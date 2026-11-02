@@ -1,18 +1,21 @@
 {
-  "version": "v0.77-undersea-exploration",
-  "date": "2026-10-31",
-  "coreSha256": "3349428141f5f44fcf6bb66ab3d2e8105b05db48702cb3f551efc19bfa2937c3",
-  "explorationSha256": "d97f2647e750f75073f134ae4c356049782e090e1ad2d731e9a7d728e8785c49",
+  "version": "v0.90-fishing-feedback",
+  "date": "2026-11-02",
+  "coreSha256": "529bf47872c7e7a364afd5b2c088440ca9ea1570d0ac7e667c0b9c1a91cfbc2e",
+  "explorationSha256": "a8e2b686fc909e1812489a8b3dfa6544b25e54f15c2ec5f81f4a8f9a42283a6c",
   "htmlSha256": {
-    "index.html": "edff41deb0bd8807b57a4b7cfd7dfe99cfc1cabc9cf64c734f2511e8e5f98c1e",
-    "voyage.html": "6284f021f385bab05d83c48cf743eb7bd29844fe7f51bbf03f0f726031f8dd53",
-    "guard.html": "1fcbb7de67fd8e21df186a4893cf25b7c32b4880a870cc81ae0654ece494c945",
-    "appearance.html": "d7ff434b986a6aa65b8a3d8ec81d868798e4b8a4a90e72a747bc3974cdc23dd5",
-    "fish.html": "0fc23f20c66bf5e22d77da60f3aa60f1f12eba22eff8fdabb8373133a59fb3af",
-    "power.html": "3f1fbf2af105761299957f864aefcd8388c88081d40b6cafaeb20a22f647e45f",
-    "achievements.html": "97039ab81f769e41e20a3e368781387501a93fa8b616136ea3de3998f7ed4dfa",
-    "build.html": "306cddca4bedffad5363de55586cf91c32236f80531fc0baae1f948232dea4ed",
-    "dive.html": "d94c9f7efdd33492f5728abf45b60f90822ebeac953bc692bc475d8a8bf71973",
-    "explore.html": "fea94935682726d00e434d8f06fae3eed8a204bda4b434d3b673dcbcdd2b37b7"
+    "index.html": "c88e925b58b716e465186f859829649300efc7f05bdef5b2c5649e20e0527449",
+    "voyage.html": "41d36861d58bb6a604a54e08bce734cdec94f8048ca7f7990ed03745e40c98b0",
+    "guard.html": "7c062b7cf3bab0201a97a0ef956a9a5b2777d34ab1842bc051919fa9ef99c815",
+    "appearance.html": "e399f04ea05c818b2bb6d582491ea3fc6be620cf50e59cf16afdef904ba7580d",
+    "fish.html": "78019a82ea03c34aed2823af72aafcbb62eb527d51f051d25627cff829e41a52",
+    "power.html": "4dfa72f25501efde229619750a0eb3babca63167a7da622eb6ed56966ab85be5",
+    "achievements.html": "2d6ec9f07ba0b006c4f39dc1f7363aa6979848c4f9acc02125ad92b87e90c878",
+    "build.html": "e58ff76ce2a6fc1577a20d71fcf50d4818b527ef190676949fb5b79efafac5b0",
+    "dive.html": "5b3317ad65cdd09019b556781f7f61f6a608ad6e2ca64c8b7b2f9a14ff4a33ad",
+    "explore.html": "326efa90dd88c0cb000fc11740c87d6accf2546ffad5c6b96bf2de20474ff5b0",
+    "expedition.html": "96c3fb121997e8a2c32623a4d666c4cff31650d239d86a9d8598b674edca70bc",
+    "chapter-one.html": "1bdff81dd2f98a34e97ca69356ef521138575f2d7a35e74a1fb72de4861ad4a6",
+    "fishing.html": "d24f69e48d15a81587a66954b690b2d59068e64ba97681dd184f91eabe7ecc6f"
   }
 }
