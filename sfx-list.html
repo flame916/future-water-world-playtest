@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>未来水世界 · 音效素材清单</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#0A1B26;color:#EDE7DA;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+body{padding:14px 12px 60px;max-width:640px;margin:0 auto}
+h1{font-size:19px;margin:2px 0 6px;font-weight:800}
+.sub{font-size:11.5px;color:#8FA9B6;line-height:1.7;margin-bottom:14px}
+.sub b{color:#C79A4A}
+.bar{position:sticky;top:0;z-index:9;background:#0A1B26;padding:8px 0 10px;
+  border-bottom:1px solid rgba(237,231,218,.1);margin-bottom:12px}
+.bar button{width:100%;padding:12px;font-family:inherit;font-size:13px;font-weight:800;
+  border:none;border-radius:9px;background:#7A4A24;color:#EDE7DA;cursor:pointer}
+.bar button:active{background:#A9743F}
+.bar .stat{font-size:11px;color:#8FA9B6;margin-top:7px;text-align:center}
+h2{font-size:14.5px;margin:20px 0 8px;font-weight:800;color:#C79A4A;
+  padding-left:9px;border-left:3px solid #C79A4A}
+.use{margin-bottom:11px;background:#0F2836;border:1px solid rgba(237,231,218,.09);
+  border-radius:10px;overflow:hidden}
+.usehead{display:flex;align-items:center;gap:7px;padding:9px 11px 7px}
+.usehead b{font-size:13px}
+.tag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;
+  background:#1B4A5A;color:#9FD0DC}
+.tag.loop{background:#4A3A1B;color:#E8C583}
+.cand{display:flex;align-items:center;gap:9px;padding:7px 11px;
+  border-top:1px solid rgba(237,231,218,.06)}
+.cand.sel{background:rgba(199,154,74,.14)}
+.play{flex:0 0 40px;height:34px;border-radius:8px;border:1px solid rgba(237,231,218,.18);
+  background:#1B4A5A;color:#EDE7DA;font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-family:inherit}
+.play:active{background:#22677C}
+.play.on{background:#C79A4A;color:#0A1B26;border-color:#C79A4A}
+.info{flex:1;min-width:0}
+.info .t{font-size:11.5px;line-height:1.35;word-break:break-all}
+.info .m{font-size:9.5px;color:#7B93A0;margin-top:2px}
+.info .m a{color:#7B93A0;text-decoration:none}
+.pick{flex:0 0 34px;height:34px;border-radius:8px;border:1px solid rgba(237,231,218,.18);
+  background:#12303D;color:#7B93A0;font-size:15px;cursor:pointer;font-family:inherit}
+.pick.on{background:#2D6A4F;border-color:#4FA37B;color:#C8F0DC}
+.done{position:fixed;left:0;right:0;bottom:0;background:#122C3A;
+  border-top:1px solid rgba(237,231,218,.15);padding:11px 14px;font-size:11px;
+  color:#9FB3BE;display:none;z-index:20}
+.done.on{display:block}
+.done b{color:#C79A4A}
+.done .row2{display:flex;gap:8px;margin-top:8px}
+.done button{flex:1;padding:11px;font-family:inherit;font-size:12px;font-weight:700;
+  border-radius:8px;border:none;background:#1B4A5A;color:#EDE7DA;cursor:pointer}
+.done button.primary{background:#C79A4A;color:#0A1B26}
+.tip{font-size:11px;color:#6E8794;line-height:1.7;margin-top:18px}
+</style>
+</head>
+<body>
+<h1>音效素材清单</h1>
+<div class="sub">
+  来源 <b>freesound.org</b>，全部筛过 <b>CC0（公共领域）</b>——可商用、可修改、无需署名。<br>
+  每条选一个，点 ✓ 标记。改完点底部按钮把结果发我。
+</div>
+
+<div class="bar">
+  <button id="sendBtn">✓ 生成选择结果</button>
+  <div class="stat" id="stat">已选 0 / 42</div>
+</div>
+
+<div id="list"></div>
+
+<div class="tip">
+  循环类（海浪、风、雨、水下、闷响、发动机、炉子）建议裁成 4-8 秒做 loop，
+  原文件太长会占包体。<br>
+  预览是 freesound 的低码率版本，正式用要下载原文件（点每条的链接进 freesound 页面）。
+</div>
+
+<div class="done" id="done">
+  <div id="doneTxt"></div>
+  <div class="row2">
+    <button onclick="copyOut()">复制清单</button>
+    <button class="primary" onclick="hideDone()">关闭</button>
+  </div>
+</div>
+
+<script>
+var DATA = [{"group": "打捞", "items": [{"key": "whoosh", "label": "抛钩破空", "loop": false, "cands": [{"id": "19307", "title": "hi speed electronic whoosh 1.wav", "dur": 0.93, "mp3": "https://cdn.freesound.org/previews/19/19307_84709-lq.mp3", "page": "https://freesound.org/s/19307/"}, {"id": "449996", "title": "whoosh_short_mid.wav", "dur": 2.68, "mp3": "https://cdn.freesound.org/previews/449/449996_3217484-lq.mp3", "page": "https://freesound.org/s/449996/"}, {"id": "683101", "title": "quick woosh", "dur": 2.05, "mp3": "https://cdn.freesound.org/previews/683/683101_6253486-lq.mp3", "page": "https://freesound.org/s/683101/"}]}, {"key": "rope", "label": "绳索张力", "loop": false, "cands": [{"id": "676988", "title": "Stretch - Short", "dur": 1.12, "mp3": "https://cdn.freesound.org/previews/676/676988_2578040-lq.mp3", "page": "https://freesound.org/s/676988/"}]}, {"key": "wood_impact", "label": "木料落地", "loop": false, "cands": [{"id": "846670", "title": "Percussive hits on wooden beams", "dur": 1.51, "mp3": "https://cdn.freesound.org/previews/846/846670_1856262-lq.mp3", "page": "https://freesound.org/s/846670/"}, {"id": "457741", "title": "Wall Bump 1.wav", "dur": 1.25, "mp3": "https://cdn.freesound.org/previews/457/457741_4574070-lq.mp3", "page": "https://freesound.org/s/457741/"}, {"id": "166605", "title": "Deadly Trap with Spikes and Sharp Sticks for Video Games", "dur": 1.99, "mp3": "https://cdn.freesound.org/previews/166/166605_71257-lq.mp3", "page": "https://freesound.org/s/166605/"}]}, {"key": "metal_scrap", "label": "废铁碰撞", "loop": false, "cands": [{"id": "741355", "title": "Metal Clank (Light and Wobbling)", "dur": 3.7, "mp3": "https://cdn.freesound.org/previews/741/741355_16104671-lq.mp3", "page": "https://freesound.org/s/741355/"}, {"id": "345080", "title": "FX METAL CLANKING ON CONCRETE 501.wav", "dur": 3.35, "mp3": "https://cdn.freesound.org/previews/345/345080_1256155-lq.mp3", "page": "https://freesound.org/s/345080/"}, {"id": "801742", "title": "Metal Beam Knife Plank Vibration Wobble SFX 5", "dur": 4.75, "mp3": "https://cdn.freesound.org/previews/801/801742_2520418-lq.mp3", "page": "https://freesound.org/s/801742/"}]}, {"key": "glass_bottle", "label": "玻璃瓶", "loop": false, "cands": [{"id": "447756", "title": "glass - blowing over glass bottle 11.wav", "dur": 2.72, "mp3": "https://cdn.freesound.org/previews/447/447756_5923045-lq.mp3", "page": "https://freesound.org/s/447756/"}, {"id": "822407", "title": "opening a glass bottle", "dur": 0.23, "mp3": "https://cdn.freesound.org/previews/822/822407_14007850-lq.mp3", "page": "https://freesound.org/s/822407/"}, {"id": "844259", "title": "Wine Glass Bottle Tap", "dur": 1.0, "mp3": "https://cdn.freesound.org/previews/844/844259_12873144-lq.mp3", "page": "https://freesound.org/s/844259/"}]}, {"key": "splash_small", "label": "小水花", "loop": false, "cands": [{"id": "454337", "title": "water trickle small splash roomy bgsound.flac", "dur": 5.59, "mp3": "https://cdn.freesound.org/previews/454/454337_612689-lq.mp3", "page": "https://freesound.org/s/454337/"}, {"id": "398039", "title": "water splash 2", "dur": 1.89, "mp3": "https://cdn.freesound.org/previews/398/398039_7586736-lq.mp3", "page": "https://freesound.org/s/398039/"}, {"id": "398032", "title": "Splash", "dur": 1.33, "mp3": "https://cdn.freesound.org/previews/398/398032_7586736-lq.mp3", "page": "https://freesound.org/s/398032/"}]}, {"key": "wood_break", "label": "木头断裂", "loop": false, "cands": [{"id": "669457", "title": "SFX_wood_cracking.wav", "dur": 3.35, "mp3": "https://cdn.freesound.org/previews/669/669457_1106446-lq.mp3", "page": "https://freesound.org/s/669457/"}, {"id": "853277", "title": "Wood Cracking - Ship Damage Taken Game SFX Alternate 2 of 2", "dur": 0.69, "mp3": "https://cdn.freesound.org/previews/853/853277_9129912-lq.mp3", "page": "https://freesound.org/s/853277/"}, {"id": "875588", "title": "Break off wood stick 4", "dur": 1.02, "mp3": "https://cdn.freesound.org/previews/875/875588_17675683-lq.mp3", "page": "https://freesound.org/s/875588/"}]}]}, {"group": "家园建造", "items": [{"key": "wood_place", "label": "放置木结构", "loop": false, "cands": [{"id": "831944", "title": "33cl Cola can placed on wood - DJI-MIC3", "dur": 0.6, "mp3": "https://cdn.freesound.org/previews/831/831944_5287430-lq.mp3", "page": "https://freesound.org/s/831944/"}]}, {"key": "hammer", "label": "敲打木头", "loop": false, "cands": [{"id": "173941", "title": "wood hammer, gavel, knock, pound, jury, court.mp3", "dur": 3.61, "mp3": "https://cdn.freesound.org/previews/173/173941_3229685-lq.mp3", "page": "https://freesound.org/s/173941/"}, {"id": "202231", "title": "hammering or knocking sound", "dur": 2.52, "mp3": "https://cdn.freesound.org/previews/202/202231_3725006-lq.mp3", "page": "https://freesound.org/s/202231/"}, {"id": "154465", "title": "Hammering on Wood_1-2.aif", "dur": 5.34, "mp3": "https://cdn.freesound.org/previews/154/154465_2592491-lq.mp3", "page": "https://freesound.org/s/154465/"}]}, {"key": "boat_creak", "label": "木板吱呀", "loop": false, "cands": [{"id": "590171", "title": "Creaking in Room 8.wav", "dur": 2.97, "mp3": "https://cdn.freesound.org/previews/590/590171_8198141-lq.mp3", "page": "https://freesound.org/s/590171/"}, {"id": "506665", "title": "Wood Creak Single V10", "dur": 1.19, "mp3": "https://cdn.freesound.org/previews/506/506665_4921277-lq.mp3", "page": "https://freesound.org/s/506665/"}, {"id": "618083", "title": "2022-02-06 wood creak 3.wav", "dur": 0.59, "mp3": "https://cdn.freesound.org/previews/618/618083_11204664-lq.mp3", "page": "https://freesound.org/s/618083/"}]}, {"key": "footstep_wood", "label": "木地板脚步", "loop": false, "cands": [{"id": "340983", "title": "Footstep on wood", "dur": 0.5, "mp3": "https://cdn.freesound.org/previews/340/340983_4978149-lq.mp3", "page": "https://freesound.org/s/340983/"}, {"id": "421153", "title": "Footstep_Wood_Toe_1.wav", "dur": 0.16, "mp3": "https://cdn.freesound.org/previews/421/421153_5820033-lq.mp3", "page": "https://freesound.org/s/421153/"}, {"id": "565489", "title": "Footstep Wood/Concrete Chamber Echo 10", "dur": 0.44, "mp3": "https://cdn.freesound.org/previews/565/565489_2383554-lq.mp3", "page": "https://freesound.org/s/565489/"}]}, {"key": "wood_break", "label": "木头断裂", "loop": false, "cands": [{"id": "669457", "title": "SFX_wood_cracking.wav", "dur": 3.35, "mp3": "https://cdn.freesound.org/previews/669/669457_1106446-lq.mp3", "page": "https://freesound.org/s/669457/"}, {"id": "853277", "title": "Wood Cracking - Ship Damage Taken Game SFX Alternate 2 of 2", "dur": 0.69, "mp3": "https://cdn.freesound.org/previews/853/853277_9129912-lq.mp3", "page": "https://freesound.org/s/853277/"}, {"id": "875588", "title": "Break off wood stick 4", "dur": 1.02, "mp3": "https://cdn.freesound.org/previews/875/875588_17675683-lq.mp3", "page": "https://freesound.org/s/875588/"}]}]}, {"group": "猫", "items": [{"key": "cat_meow", "label": "猫叫", "loop": false, "cands": [{"id": "110011", "title": "cat meow", "dur": 1.54, "mp3": "https://cdn.freesound.org/previews/110/110011_1537422-lq.mp3", "page": "https://freesound.org/s/110011/"}, {"id": "508686", "title": "SND_CatHighMeows.wav", "dur": 1.73, "mp3": "https://cdn.freesound.org/previews/508/508686_10953321-lq.mp3", "page": "https://freesound.org/s/508686/"}, {"id": "66518", "title": "meow9.wav", "dur": 5.0, "mp3": "https://cdn.freesound.org/previews/66/66518_334103-lq.mp3", "page": "https://freesound.org/s/66518/"}]}, {"key": "cat_purr", "label": "猫呼噜", "loop": false, "cands": [{"id": "528949", "title": "Cat's short purr", "dur": 1.74, "mp3": "https://cdn.freesound.org/previews/528/528949_3302313-lq.mp3", "page": "https://freesound.org/s/528949/"}, {"id": "732886", "title": "CUTE-CAT-PURR", "dur": 0.13, "mp3": "https://cdn.freesound.org/previews/732/732886_151878-lq.mp3", "page": "https://freesound.org/s/732886/"}, {"id": "575933", "title": "Cat Purr", "dur": 5.63, "mp3": "https://cdn.freesound.org/previews/575/575933_1824398-lq.mp3", "page": "https://freesound.org/s/575933/"}]}]}, {"group": "潜水", "items": [{"key": "dive_splash", "label": "入水", "loop": false, "cands": [{"id": "679404", "title": "Dipping below water", "dur": 4.34, "mp3": "https://cdn.freesound.org/previews/679/679404_14805886-lq.mp3", "page": "https://freesound.org/s/679404/"}, {"id": "679407", "title": "Dipping below water 2", "dur": 4.12, "mp3": "https://cdn.freesound.org/previews/679/679407_14805886-lq.mp3", "page": "https://freesound.org/s/679407/"}]}, {"key": "swim", "label": "游动水声", "loop": false, "cands": [{"id": "398042", "title": "water swimming 3", "dur": 1.89, "mp3": "https://cdn.freesound.org/previews/398/398042_7586736-lq.mp3", "page": "https://freesound.org/s/398042/"}]}, {"key": "bubbles", "label": "气泡群", "loop": false, "cands": [{"id": "840042", "title": "Bubbles", "dur": 1.19, "mp3": "https://cdn.freesound.org/previews/840/840042_17707799-lq.mp3", "page": "https://freesound.org/s/840042/"}, {"id": "539823", "title": "Bubbles 001.wav", "dur": 4.8, "mp3": "https://cdn.freesound.org/previews/539/539823_6205597-lq.mp3", "page": "https://freesound.org/s/539823/"}]}, {"key": "bubble_single", "label": "单颗气泡", "loop": false, "cands": [{"id": "269583", "title": "Bubble", "dur": 0.38, "mp3": "https://cdn.freesound.org/previews/269/269583_3854053-lq.mp3", "page": "https://freesound.org/s/269583/"}]}, {"key": "sonar", "label": "提示音", "loop": false, "cands": [{"id": "12677", "title": "Sonar_pings.ogg", "dur": 3.67, "mp3": "https://cdn.freesound.org/previews/12/12677_33429-lq.mp3", "page": "https://freesound.org/s/12677/"}, {"id": "38704", "title": "archi_sonar_05.wav", "dur": 4.0, "mp3": "https://cdn.freesound.org/previews/38/38704_107780-lq.mp3", "page": "https://freesound.org/s/38704/"}, {"id": "808185", "title": "Sonar ping", "dur": 3.43, "mp3": "https://cdn.freesound.org/previews/808/808185_11548422-lq.mp3", "page": "https://freesound.org/s/808185/"}]}, {"key": "deep_rumble", "label": "深海闷响（循环）", "loop": true, "cands": [{"id": "321812", "title": "Cinematic Deep Bass Rumble", "dur": 28.24, "mp3": "https://cdn.freesound.org/previews/321/321812_5501856-lq.mp3", "page": "https://freesound.org/s/321812/"}, {"id": "853573", "title": "Broken Sci-fi Reactor Core, Vibrating Metal, Deep Rumble, Sparking Glitches", "dur": 6.12, "mp3": "https://cdn.freesound.org/previews/853/853573_15636277-lq.mp3", "page": "https://freesound.org/s/853573/"}, {"id": "767546", "title": "Spring oscillation with deep rumble", "dur": 6.4, "mp3": "https://cdn.freesound.org/previews/767/767546_5069064-lq.mp3", "page": "https://freesound.org/s/767546/"}]}, {"key": "underwater", "label": "水下环境（循环）", "loop": true, "cands": [{"id": "504641", "title": "Underwater Ambience", "dur": 46.86, "mp3": "https://cdn.freesound.org/previews/504/504641_9395330-lq.mp3", "page": "https://freesound.org/s/504641/"}, {"id": "675196", "title": "S21-24 Underwater metal clanking.wav", "dur": 36.59, "mp3": "https://cdn.freesound.org/previews/675/675196_2524442-lq.mp3", "page": "https://freesound.org/s/675196/"}, {"id": "567347", "title": "Underwater ambience.wav", "dur": 44.0, "mp3": "https://cdn.freesound.org/previews/567/567347_12735833-lq.mp3", "page": "https://freesound.org/s/567347/"}]}, {"key": "electric", "label": "电鳗放电", "loop": false, "cands": [{"id": "853286", "title": "Tesla Tower Zap - Electric Zap Short - Game SFX", "dur": 1.44, "mp3": "https://cdn.freesound.org/previews/853/853286_9129912-lq.mp3", "page": "https://freesound.org/s/853286/"}, {"id": "512471", "title": "Electric zap.wav", "dur": 0.22, "mp3": "https://cdn.freesound.org/previews/512/512471_7372230-lq.mp3", "page": "https://freesound.org/s/512471/"}, {"id": "136542", "title": "ELECTRIC_ZAP_001.wav", "dur": 0.75, "mp3": "https://cdn.freesound.org/previews/136/136542_1206321-lq.mp3", "page": "https://freesound.org/s/136542/"}]}]}, {"group": "航行", "items": [{"key": "waves", "label": "海浪（循环）", "loop": true, "cands": [{"id": "789503", "title": "AMBSea-EXT_AMBIANCE-Ocean Waves Crashing On Nearby Wall To The Left And A Party Of Young Adults With Rave Music To The Right_YMLT_NONE_62372028", "dur": 41.16, "mp3": "https://cdn.freesound.org/previews/789/789503_16787921-lq.mp3", "page": "https://freesound.org/s/789503/"}, {"id": "864279", "title": "Ocean Waves with Sparse Ambient Bells", "dur": 60.0, "mp3": "https://cdn.freesound.org/previews/864/864279_15636277-lq.mp3", "page": "https://freesound.org/s/864279/"}, {"id": "587098", "title": "Ocean Wave AIF", "dur": 10.01, "mp3": "https://cdn.freesound.org/previews/587/587098_13234759-lq.mp3", "page": "https://freesound.org/s/587098/"}]}, {"key": "wind", "label": "风声（循环）", "loop": true, "cands": [{"id": "182123", "title": "mega wind 01", "dur": 106.53, "mp3": "https://cdn.freesound.org/previews/182/182123_1688566-lq.mp3", "page": "https://freesound.org/s/182123/"}, {"id": "481148", "title": "R27-28-Big Cold Winter Wind.wav", "dur": 68.65, "mp3": "https://cdn.freesound.org/previews/481/481148_2524442-lq.mp3", "page": "https://freesound.org/s/481148/"}, {"id": "29532", "title": "wind3.wav", "dur": 24.62, "mp3": "https://cdn.freesound.org/previews/29/29532_1407-lq.mp3", "page": "https://freesound.org/s/29532/"}]}, {"key": "sail_flap", "label": "帆布抖动", "loop": false, "cands": [{"id": "391945", "title": "cloth flap", "dur": 0.75, "mp3": "https://cdn.freesound.org/previews/391/391945_6450069-lq.mp3", "page": "https://freesound.org/s/391945/"}, {"id": "494797", "title": "Jacket/Cloth Rustle 9", "dur": 0.33, "mp3": "https://cdn.freesound.org/previews/494/494797_4682121-lq.mp3", "page": "https://freesound.org/s/494797/"}]}, {"key": "wind_sail", "label": "旗帜/帆", "loop": false, "cands": [{"id": "244982", "title": "Wing Flap (Flag Flapping) 5a", "dur": 0.88, "mp3": "https://cdn.freesound.org/previews/244/244982_3008343-lq.mp3", "page": "https://freesound.org/s/244982/"}]}, {"key": "rain", "label": "雨（循环）", "loop": true, "cands": [{"id": "398742", "title": "rain - gutter - outside laudry room window.wav", "dur": 26.02, "mp3": "https://cdn.freesound.org/previews/398/398742_5923045-lq.mp3", "page": "https://freesound.org/s/398742/"}, {"id": "579840", "title": "Rain ZOOM0003 EQ", "dur": 35.84, "mp3": "https://cdn.freesound.org/previews/579/579840_2282212-lq.mp3", "page": "https://freesound.org/s/579840/"}, {"id": "79272", "title": "Ambience-summer rain 07-090718.wav", "dur": 91.45, "mp3": "https://cdn.freesound.org/previews/79/79272_94000-lq.mp3", "page": "https://freesound.org/s/79272/"}]}, {"key": "thunder", "label": "雷", "loop": false, "cands": [{"id": "696550", "title": "thunder11", "dur": 6.21, "mp3": "https://cdn.freesound.org/previews/696/696550_14040168-lq.mp3", "page": "https://freesound.org/s/696550/"}, {"id": "683421", "title": "Short_Thunder_Mid.wav", "dur": 6.72, "mp3": "https://cdn.freesound.org/previews/683/683421_14670263-lq.mp3", "page": "https://freesound.org/s/683421/"}, {"id": "795412", "title": "Thunder 12", "dur": 13.88, "mp3": "https://cdn.freesound.org/previews/795/795412_16236894-lq.mp3", "page": "https://freesound.org/s/795412/"}]}, {"key": "seagull", "label": "海鸥", "loop": false, "cands": [{"id": "179908", "title": "Seagulls and Rigging Sounds", "dur": 4.96, "mp3": "https://cdn.freesound.org/previews/179/179908_266678-lq.mp3", "page": "https://freesound.org/s/179908/"}]}, {"key": "bell", "label": "船钟", "loop": false, "cands": [{"id": "468847", "title": "43_campanas_de_barco.wav", "dur": 4.64, "mp3": "https://cdn.freesound.org/previews/468/468847_9934055-lq.mp3", "page": "https://freesound.org/s/468847/"}, {"id": "426305", "title": "Boat Bell.wav", "dur": 5.67, "mp3": "https://cdn.freesound.org/previews/426/426305_8522109-lq.mp3", "page": "https://freesound.org/s/426305/"}, {"id": "665100", "title": "SHIPBELL.wav", "dur": 2.15, "mp3": "https://cdn.freesound.org/previews/665/665100_13586972-lq.mp3", "page": "https://freesound.org/s/665100/"}]}, {"key": "engine", "label": "发动机（循环）", "loop": true, "cands": [{"id": "824190", "title": "EMD 567 engine idle/notch 1 (synth recreation)", "dur": 5.45, "mp3": "https://cdn.freesound.org/previews/824/824190_12024110-lq.mp3", "page": "https://freesound.org/s/824190/"}, {"id": "862118", "title": "engine idling", "dur": 5.27, "mp3": "https://cdn.freesound.org/previews/862/862118_19045915-lq.mp3", "page": "https://freesound.org/s/862118/"}, {"id": "702514", "title": "Engine startup-idle-shutdown.wav", "dur": 11.98, "mp3": "https://cdn.freesound.org/previews/702/702514_6007224-lq.mp3", "page": "https://freesound.org/s/702514/"}]}]}, {"group": "界面", "items": [{"key": "ui_click", "label": "点击", "loop": false, "cands": [{"id": "421475", "title": "CLICK_143.wav", "dur": 0.6, "mp3": "https://cdn.freesound.org/previews/421/421475_3387258-lq.mp3", "page": "https://freesound.org/s/421475/"}, {"id": "467951", "title": "UI Button Click", "dur": 0.12, "mp3": "https://cdn.freesound.org/previews/467/467951_6769414-lq.mp3", "page": "https://freesound.org/s/467951/"}, {"id": "513481", "title": "Click.wav", "dur": 0.42, "mp3": "https://cdn.freesound.org/previews/513/513481_10817707-lq.mp3", "page": "https://freesound.org/s/513481/"}]}, {"key": "ui_confirm", "label": "确认", "loop": false, "cands": [{"id": "822568", "title": "User Interface Elegant Wooden Confirmation Sound", "dur": 0.26, "mp3": "https://cdn.freesound.org/previews/822/822568_71257-lq.mp3", "page": "https://freesound.org/s/822568/"}, {"id": "530773", "title": "ui confirm1", "dur": 4.36, "mp3": "https://cdn.freesound.org/previews/530/530773_5452388-lq.mp3", "page": "https://freesound.org/s/530773/"}]}, {"key": "ui_error", "label": "错误", "loop": false, "cands": [{"id": "869284", "title": "19_UI_Game_Error_SFX", "dur": 0.46, "mp3": "https://cdn.freesound.org/previews/869/869284_19205925-lq.mp3", "page": "https://freesound.org/s/869284/"}]}, {"key": "ui_open", "label": "面板打开", "loop": false, "cands": [{"id": "108335", "title": "slide-click.wav", "dur": 0.94, "mp3": "https://cdn.freesound.org/previews/108/108335_1855536-lq.mp3", "page": "https://freesound.org/s/108335/"}, {"id": "584189", "title": "UI Zoom Out", "dur": 1.03, "mp3": "https://cdn.freesound.org/previews/584/584189_1038806-lq.mp3", "page": "https://freesound.org/s/584189/"}]}, {"key": "page", "label": "翻页", "loop": false, "cands": [{"id": "484968", "title": "Quiet Page Turn - 8", "dur": 0.48, "mp3": "https://cdn.freesound.org/previews/484/484968_6150892-lq.mp3", "page": "https://freesound.org/s/484968/"}, {"id": "119126", "title": "Book Turn Page 1.wav", "dur": 1.0, "mp3": "https://cdn.freesound.org/previews/119/119126_1990695-lq.mp3", "page": "https://freesound.org/s/119126/"}, {"id": "346835", "title": "PageTurn.wav", "dur": 0.52, "mp3": "https://cdn.freesound.org/previews/346/346835_2816123-lq.mp3", "page": "https://freesound.org/s/346835/"}]}]}, {"group": "反馈", "items": [{"key": "chime_success", "label": "成功", "loop": false, "cands": [{"id": "370182", "title": "4-tone chime UP", "dur": 5.0, "mp3": "https://cdn.freesound.org/previews/370/370182_6430986-lq.mp3", "page": "https://freesound.org/s/370182/"}, {"id": "660863", "title": "Chime-Improper.flac", "dur": 1.36, "mp3": "https://cdn.freesound.org/previews/660/660863_11110115-lq.mp3", "page": "https://freesound.org/s/660863/"}, {"id": "398496", "title": "wind chimes - single 04.wav", "dur": 4.04, "mp3": "https://cdn.freesound.org/previews/398/398496_5923045-lq.mp3", "page": "https://freesound.org/s/398496/"}]}, {"key": "coin", "label": "领取/金币", "loop": false, "cands": [{"id": "443258", "title": "Retro, Coin 05.wav", "dur": 0.48, "mp3": "https://cdn.freesound.org/previews/443/443258_6142149-lq.mp3", "page": "https://freesound.org/s/443258/"}, {"id": "566201", "title": "Coin - Rpg", "dur": 1.12, "mp3": "https://cdn.freesound.org/previews/566/566201_11785387-lq.mp3", "page": "https://freesound.org/s/566201/"}, {"id": "523547", "title": "Retro, Underwater Coin", "dur": 1.15, "mp3": "https://cdn.freesound.org/previews/523/523547_6142149-lq.mp3", "page": "https://freesound.org/s/523547/"}]}, {"key": "fanfare", "label": "成就", "loop": false, "cands": [{"id": "513253", "title": "victory.Wav", "dur": 7.5, "mp3": "https://cdn.freesound.org/previews/513/513253_11249582-lq.mp3", "page": "https://freesound.org/s/513253/"}, {"id": "150224", "title": "Victory 1", "dur": 1.82, "mp3": "https://cdn.freesound.org/previews/150/150224_2712074-lq.mp3", "page": "https://freesound.org/s/150224/"}, {"id": "564920", "title": "Flawless Victory Game Over (deep voice)", "dur": 5.11, "mp3": "https://cdn.freesound.org/previews/564/564920_8323418-lq.mp3", "page": "https://freesound.org/s/564920/"}]}, {"key": "harvest", "label": "拾取", "loop": false, "cands": [{"id": "822564", "title": "Pick Up Item Sound", "dur": 1.52, "mp3": "https://cdn.freesound.org/previews/822/822564_71257-lq.mp3", "page": "https://freesound.org/s/822564/"}, {"id": "267711", "title": "Picking Up Keys", "dur": 2.17, "mp3": "https://cdn.freesound.org/previews/267/267711_3666787-lq.mp3", "page": "https://freesound.org/s/267711/"}, {"id": "365519", "title": "Picking up a tea mug.mp3", "dur": 2.03, "mp3": "https://cdn.freesound.org/previews/365/365519_5407590-lq.mp3", "page": "https://freesound.org/s/365519/"}]}]}, {"group": "生活", "items": [{"key": "sizzle", "label": "炉子烹饪", "loop": true, "cands": [{"id": "575514", "title": "sizzling cooking on stove.mp3", "dur": 9.92, "mp3": "https://cdn.freesound.org/previews/575/575514_10643288-lq.mp3", "page": "https://freesound.org/s/575514/"}, {"id": "144883", "title": "Cooking.wav", "dur": 15.87, "mp3": "https://cdn.freesound.org/previews/144/144883_2402822-lq.mp3", "page": "https://freesound.org/s/144883/"}, {"id": "873539", "title": "Frying_Sausages_Sizzle", "dur": 16.9, "mp3": "https://cdn.freesound.org/previews/873/873539_19205925-lq.mp3", "page": "https://freesound.org/s/873539/"}]}, {"key": "fish_splash", "label": "鱼跃水花", "loop": false, "cands": [{"id": "507092", "title": "Fish Jumping Splash 1.wav", "dur": 2.41, "mp3": "https://cdn.freesound.org/previews/507/507092_8682843-lq.mp3", "page": "https://freesound.org/s/507092/"}, {"id": "507091", "title": "Fish Jumping Splash 2.wav", "dur": 5.21, "mp3": "https://cdn.freesound.org/previews/507/507091_8682843-lq.mp3", "page": "https://freesound.org/s/507091/"}]}]}];
+var LOOPY = {'waves':1,'wind':1,'rain':1,'underwater':1,'deep_rumble':1,'engine':1,'sizzle':1};
+var sel = {};          // key -> candidate id
+var cur = null;        // 正在播的元素
+var curBtn = null;
+
+function allKeys(){
+  var out = [];
+  DATA.forEach(function(g){ g.items.forEach(function(it){ out.push(it.key); }); });
+  return out;
+}
+var TOTAL = allKeys().length;
+
+function el(tag, cls, txt){
+  var e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(txt != null) e.textContent = txt;
+  return e;
+}
+
+function stopAll(){
+  if(cur){ try{ cur.pause(); cur.currentTime = 0; }catch(e){} cur = null; }
+  if(curBtn){ curBtn.classList.remove('on'); curBtn.textContent = '▶'; curBtn = null; }
+}
+
+function play(c, btn, loop){
+  if(cur && curBtn === btn && !cur.paused){ stopAll(); return; }
+  stopAll();
+  var a = new Audio();
+  a.src = c.mp3;
+  a.loop = !!loop;
+  a.volume = 0.9;
+  a.onended = function(){ if(curBtn===btn){ btn.classList.remove('on'); btn.textContent='▶'; curBtn=null; cur=null; } };
+  a.onerror = function(){ btn.textContent = '!'; btn.title = '加载失败'; };
+  var p = a.play();
+  if(p && p.catch) p.catch(function(){ btn.textContent = '!'; btn.title = '需要点击解锁音频'; });
+  cur = a; curBtn = btn;
+  btn.classList.add('on'); btn.textContent = '❚❚';
+}
+
+function updateStat(){
+  var n = Object.keys(sel).length;
+  var s = document.getElementById('stat');
+  s.textContent = '已选 ' + n + ' / ' + TOTAL;
+}
+
+function build(){
+  var host = document.getElementById('list');
+  DATA.forEach(function(g){
+    var h2 = el('h2', null, g.group);
+    host.appendChild(h2);
+    g.items.forEach(function(it){
+      var box = el('div', 'use');
+      var head = el('div', 'usehead');
+      head.appendChild(el('b', null, it.label));
+      if(it.loop) head.appendChild(el('span', 'tag loop', '循环'));
+      head.appendChild(el('span', 'tag', it.cands.length + ' 个候选'));
+      box.appendChild(head);
+
+      it.cands.forEach(function(c){
+        var row = el('div', 'cand');
+        row.setAttribute('data-key', it.key);
+        row.setAttribute('data-id', c.id);
+
+        var btn = el('button', 'play', '▶');
+        btn.addEventListener('click', function(){ play(c, btn, it.loop); });
+        row.appendChild(btn);
+
+        var info = el('div', 'info');
+        info.appendChild(el('div', 't', c.title));
+        var meta = el('div', 'm', c.dur + 's · ');
+        var link = el('a', null, 'freesound ↗');
+        link.href = c.page; link.target = '_blank'; link.rel = 'noopener';
+        meta.appendChild(link);
+        info.appendChild(meta);
+        row.appendChild(info);
+
+        var pick = el('button', 'pick', '✓');
+        pick.addEventListener('click', function(){
+          if(sel[it.key] === c.id){
+            delete sel[it.key];
+            document.querySelectorAll('.cand[data-key="' + it.key + '"]')
+              .forEach(function(r){ r.classList.remove('sel'); });
+            document.querySelectorAll('.cand[data-key="' + it.key + '"] .pick')
+              .forEach(function(b){ b.classList.remove('on'); });
+          } else {
+            sel[it.key] = c.id;
+            document.querySelectorAll('.cand[data-key="' + it.key + '"]')
+              .forEach(function(r){ r.classList.remove('sel'); });
+            document.querySelectorAll('.cand[data-key="' + it.key + '"] .pick')
+              .forEach(function(b){ b.classList.remove('on'); });
+            row.classList.add('sel'); pick.classList.add('on');
+          }
+          updateStat();
+        });
+        row.appendChild(pick);
+        box.appendChild(row);
+      });
+      host.appendChild(box);
+    });
+  });
+  updateStat();
+}
+
+function labelOf(key){
+  for(var i=0;i<DATA.length;i++){
+    for(var j=0;j<DATA[i].items.length;j++){
+      if(DATA[i].items[j].key === key) return DATA[i].items[j].label;
+    }
+  }
+  return key;
+}
+
+function makeText(){
+  var lines = [];
+  DATA.forEach(function(g){
+    var picked = g.items.filter(function(it){ return sel[it.key]; });
+    if(!picked.length) return;
+    lines.push('【' + g.group + '】');
+    picked.forEach(function(it){
+      var c = null;
+      it.cands.forEach(function(x){ if(x.id === sel[it.key]) c = x; });
+      lines.push('  ' + it.label + ' → ' + c.title +
+        '  (' + c.dur + 's, freesound ' + c.id + ')');
+    });
+    lines.push('');
+  });
+  if(!lines.length) lines.push('（还没选）');
+  return lines.join('\n');
+}
+
+function showDone(){
+  document.getElementById('doneTxt').innerHTML =
+    '<b>已选 ' + Object.keys(sel).length + ' / ' + TOTAL + '</b>，点「复制清单」后粘贴发我';
+  document.getElementById('done').classList.add('on');
+}
+function hideDone(){ document.getElementById('done').classList.remove('on'); }
+
+function copyOut(){
+  var t = makeText();
+  var ok = function(){ document.getElementById('doneTxt').innerHTML = '<b>已复制</b>，去粘贴发给助手'; };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(ok, function(){ fallback(t); });
+  } else fallback(t);
+}
+function fallback(t){
+  var ta = document.createElement('textarea');
+  ta.value = t; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  document.getElementById('doneTxt').innerHTML = '<b>已复制</b>（或手动全选复制）';
+}
+
+document.getElementById('sendBtn').addEventListener('click', showDone);
+
+build();
+</script>
+</body>
+</html>
