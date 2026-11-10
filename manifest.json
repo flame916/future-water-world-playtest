@@ -20,19 +20,19 @@
     "coreSha256":  "b43eb843428b89bce9e8929a23dbf9d76b43d57e5da53ff40ff9f751c7598226",
     "explorationSha256":  "9f9b4d2b06bac4eb8bcbf6481f3e4c61dc6f99f5141f71980186ad7c5c180d34",
     "files":  {
-                  "expedition.html":  "a9df3fb7ce850ea48877fffe51014adea313d40884d445f9baf4e04532b0172f",
-                  "appearance.html":  "aa085030e61f4e9e89112302cba8dbbebcff0dd81cb5a1dc9728d9d5c602bdc4",
-                  "fish.html":  "f98740531d972e44885f51312df0e9443c24a2685322844c48b284fad6d0cbe2",
-                  "guard.html":  "7775c91a5ce7d340af001b0cf7e185c0e63b249d909c3f955f59993606bbdaf4",
-                  "explore.html":  "781f0af02959e0cadcb7516f7f74bf9cb3c0cb33013d25804b464cf8e523f26a",
-                  "chapter-one.html":  "33bf2eda2da0ad2920311c2427b827abaaf1095dd53ea82d640cfaa0b26f2459",
-                  "build.html":  "cbade5590184323da48d45ef364a3732f39289ddfd501c37053ea7d737167c76",
-                  "voyage.html":  "2c48a8c1eceec00aad8e153d5a28ae3d20c2a2057087357e949a64e274842478",
-                  "dive.html":  "1edd17971355c26075b95dfdab9d29bd1b6a7dcf4d950e94ea7b05f4a5c153b1",
-                  "achievements.html":  "8a037ffdc9c7f509662f87d511c1cb4ed1d81373b3c07acfefaaaeef876d3f26",
+                  "expedition.html":  "1c3cc75f6d5b5e61c5b5f8b100dac718a880162df06c24ca61f17da926ac34c0",
+                  "appearance.html":  "b700847dde0d1a6690257de223db55cc4b80b40564ee60709c005c057b789ad7",
+                  "guard.html":  "70fef1824fa83a1185d7ec17592c371342df156c61e44f90e4f90f546b75f1e0",
+                  "fish.html":  "ee33e0bea16d4ac6beeb1423c296e364d2dea82849b947a473a89748dba325da",
+                  "chapter-one.html":  "95cb3e5478563f5561d6d57c66d7c0aaa7b2fe1a0fe5015818471b5c619b14fa",
+                  "build.html":  "6b54ea1512e3ccb275ec0975349eb06454c36c8b0064db61b46e0cc87f9f9019",
+                  "voyage.html":  "e0d83eabc217ac610a34b522460ae0a7edf19fc0b679dcccfd24e2237c8fb33e",
+                  "power.html":  "410aa06650bf0e543a32b03d7a3b00e347adc96aae5ecb6cbf0bbd6838b67418",
+                  "dive.html":  "1c36a84e31c2daca41682fe8dd0cd2bbacd6e76c4590522c4d3f7923c98c1009",
+                  "achievements.html":  "95d94f801f8608050eabbae843df61cda61eb94613dfe5448c6c66cfc4060750",
+                  "explore.html":  "a00cd1bcb26ae04f284b39261cb4986b675b3cada3f5ad1e99d3bdaaf0cf78e5",
                   "试玩说明.txt":  "f6754508544afe7e9c37e78341a296bef42c33c97a01fe51756fa3fe4566b15d",
-                  "power.html":  "0377289e375eeeaa6dc9275082e918d26100e2c44be2b505459b1689663788e4",
-                  "fishing.html":  "8e69e65d6fc0a878a4b8bb8a9a44529b8948cea3660a38859447c54a412654cb",
-                  "index.html":  "280e4f44d414db23ae51b0451785fc255d4850902942fcfc99f21e47c2737517"
+                  "fishing.html":  "3447fefe33cd06ccc5d915467ac1986ca99c7e34f4fce477fbb7fa53d9f1b1fc",
+                  "index.html":  "e1b36515a3b6d07e783eef3fd043169b8ef2d33029a041eb5121f65e2f49b869"
               }
 }
